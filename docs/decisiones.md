@@ -22,4 +22,4 @@ Toda decisión importante se registra aquí **antes** de implementarla.
 | D10 | Interfaz y reportes **bilingües ES/EN**, con selector de idioma | APROBADA | Posible jurado en inglés | 2026‑11‑15 |
 | D11 | Repo `XxRaliugaRdzxX/Nasa-hackaton-UPQ` por SSH con deploy key del servidor (alias `github-nasa-upq`). Commits firmados por "Dan Aguilar" con el correo noreply de GitHub | APROBADA | `07` §4 | 2026‑11‑15 |
 | D12 | Plazo de **más de 1 mes**: se ejecuta el plan completo de 6 semanas de `06`, incluidas las extensiones de la Fase 4 | APROBADA | — | 2026‑11‑15 |
-| D13 | Licencia del repositorio público (MIT, Apache‑2.0, GPL‑3.0…) | PENDIENTE | Sin licencia, legalmente nadie puede reutilizar el código | — |
+| D13 | Licencia **MIT** para el código. Los datos de NASA y las fuentes de regiones conservan sus propias licencias | APROBADA | Permisiva y estándar en proyectos académicos | 2026‑11‑15 |

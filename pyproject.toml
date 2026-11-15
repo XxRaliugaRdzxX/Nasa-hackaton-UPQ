@@ -9,6 +9,8 @@ description = "Marine Ecosystem Change Explorer: monitoreo y análisis de tenden
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Equipo Nasa-hackaton-UPQ" }]
+license = "MIT"
+license-files = ["LICENSE"]
 
 # Núcleo: adquisición, procesamiento, estadística y geoespacial
 dependencies = [

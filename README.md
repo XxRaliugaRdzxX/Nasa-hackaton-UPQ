@@ -25,3 +25,6 @@ Las reglas de trabajo en equipo están en [`docs/CONTRIBUTING.md`](docs/CONTRIBU
 
 ## Fuentes de datos
 NASA OB.DAAC (MODIS‑Aqua, PACE‑OCI), NASA PO.DAAC (GHRSST MUR25), NASA GES DISC (GPM IMERG, GLDAS). Los DOI y versiones están en [`docs/02_productos_datos.md`](docs/02_productos_datos.md).
+
+## Licencia
+Código bajo licencia [MIT](LICENSE). Los datos de NASA y las fuentes de las regiones (Marine Regions, Natural Earth, HydroBASINS) conservan sus propias licencias y condiciones de cita; ver `docs/02_productos_datos.md`.
