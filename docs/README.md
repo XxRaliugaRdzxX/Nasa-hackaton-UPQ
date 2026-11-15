@@ -8,7 +8,8 @@
 | 04 | [Metodología estadística](04_metodologia_estadistica.md) | Anomalías, OLS‑HAC, Mann‑Kendall estacional, Sen, FDR y correlaciones con desfase |
 | 05 | [Dashboard y reportes](05_dashboard_reportes.md) | Wireframes de las 5 páginas, lenguaje visual y generación de PDF/CSV |
 | 06 | [Plan de trabajo y riesgos](06_plan_trabajo_riesgos.md) | Fases, tareas por equipo, complejidad, ruta crítica y matriz de riesgos |
-| 07 | [Despliegue](07_despliegue.md) | Servidor, Cloudflare Tunnel, Docker Compose y GitHub |
+| 07 | [Despliegue](07_despliegue.md) | Servidor, túnel propio de Cloudflare, Docker Compose y operación |
+| 08 | [Contratos e integración](08_contratos_integracion.md) | Sistema base "Trend Detective": contratos, pruebas y cómo integrar regiones, variables y análisis |
 | — | [Registro de decisiones](decisiones.md) | Decisiones propuestas, aprobadas y pendientes |
 | — | [Guía de contribución](CONTRIBUTING.md) | Ramas, commits, convenciones y manejo de datos |
 

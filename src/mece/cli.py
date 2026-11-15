@@ -18,6 +18,8 @@ app = typer.Typer(
 )
 regions_app = typer.Typer(help="Regiones de estudio", no_args_is_help=True)
 app.add_typer(regions_app, name="regions")
+pipeline_app = typer.Typer(help="Preparación de datos (worker)", no_args_is_help=True)
+app.add_typer(pipeline_app, name="pipeline")
 
 
 @app.callback()
@@ -91,6 +93,50 @@ def regions_build(
     if figure:
         fig = br.plot_control(regions, s, s.root / "docs" / "figuras" / "regiones_control.png")
         typer.echo(f"Figura de control: {fig}")
+
+
+@pipeline_app.command("fetch")
+def pipeline_fetch(
+    dataset: str = typer.Option(..., help="chl | sst"),
+    start: str = typer.Option(None, help="YYYY-MM (por defecto, inicio del producto)"),
+    end: str = typer.Option(None, help="YYYY-MM (por defecto, último mes disponible)"),
+) -> None:
+    """Llena los almacenes regionales con un dataset (solo descarga lo que falta)."""
+    from mece import pipeline
+
+    typer.echo(pipeline.fetch(dataset, start, end))
+
+
+@pipeline_app.command("globe")
+def pipeline_globe() -> None:
+    """Textura de SST global y costas para el globo 3D."""
+    from mece import pipeline
+
+    typer.echo(pipeline.globe_texture())
+    typer.echo(pipeline.coastline_110m())
+
+
+@pipeline_app.command("precompute")
+def pipeline_precompute(
+    case: list[str] = typer.Option(None, help="IDs de caso (todos si se omite)"),
+) -> None:
+    """Precalcula mapas de tendencia de cada caso de estudio."""
+    from mece import pipeline
+
+    for k, v in pipeline.precompute(case).items():
+        typer.echo(f"  {k:32s} {v}")
+
+
+@pipeline_app.command("bootstrap")
+def pipeline_bootstrap() -> None:
+    """Preparación completa: globo, clorofila, SST y precálculo."""
+    from mece import pipeline
+
+    pipeline.coastline_110m()
+    pipeline.globe_texture()
+    pipeline.fetch("chl")
+    pipeline.fetch("sst")
+    pipeline.precompute()
 
 
 if __name__ == "__main__":

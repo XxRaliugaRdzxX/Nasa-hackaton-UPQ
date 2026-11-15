@@ -71,6 +71,9 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "N"]
+# B008: Typer declara opciones en los argumentos por diseño
+# N812: alias cortos de módulos (data as D) · N818: nombres de excepciones en español
+ignore = ["B008", "N812", "N818"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

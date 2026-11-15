@@ -1,0 +1,46 @@
+# Marine Ecosystem Change Explorer · despliegue en agui-server
+#   ./docker/deploy.sh            app + túnel
+#   ./docker/deploy.sh worker     además el worker de datos
+name: mece
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: mece/app:${MECE_VERSION:-0.1.0}
+    container_name: mece_app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MECE_APP_PORT:-8502}:8501"   # solo local; el público entra por el túnel
+    volumes:
+      - ../data:/app/data
+    mem_limit: 768m
+    cpus: 2.0
+
+  worker:
+    image: mece/app:${MECE_VERSION:-0.1.0}
+    container_name: mece_worker
+    profiles: ["worker"]
+    restart: unless-stopped
+    command: ["bash", "docker/worker.sh"]
+    env_file: ../.env
+    environment:
+      - MECE_DATA_DIR=/app/data
+    volumes:
+      - ../data:/app/data
+    mem_limit: 1g
+    cpus: 1.5
+    depends_on: [app]
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.7.3
+    container_name: mece_tunnel
+    restart: unless-stopped
+    user: "1000:1000"
+    command: ["tunnel", "--config", "/etc/cloudflared/config.yml", "run"]
+    volumes:
+      - ./cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+      - ${CF_CREDENTIALS_FILE:?Define CF_CREDENTIALS_FILE en .env}:/etc/cloudflared/credentials.json:ro
+    mem_limit: 128m
+    depends_on: [app]

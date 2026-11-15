@@ -1,4 +1,6 @@
-# 07 · Propuesta de despliegue
+# 07 · Despliegue
+
+> **En producción desde 2026‑11‑15: https://nasa.cardenal-shekers.online** (D17)
 
 ## 1. Situación actual del servidor (revisada el 2026‑11‑15)
 - **agui-server:** Ubuntu, 4 CPU, 3.6 GB de RAM con unos 2 GB disponibles y swap ya en uso, 394 GB de disco libre, Docker 29.
@@ -15,20 +17,35 @@
 
 **Decisión aprobada (D09): opción A, subdominio.** Logra el objetivo, que el sitio sea público en tu dominio, sin bajar el otro servicio. La opción B solo aporta una URL más corta a cambio de tumbar un sistema en uso. **No se hará ningún cambio en cloudflared ni en RRHH sin tu confirmación explícita en ese momento.**
 
-## 3. Topología
-```
-Internet ──HTTPS──► Cloudflare ──túnel──► cloudflared (host)
-                                            ├─ cardenal-shekers.online        → localhost:80   (RRHH, sin cambios)
-                                            └─ marine.cardenal-shekers.online → localhost:8502 (mece-app)
+## 3. Topología implementada (D17)
 
-docker compose (proyecto "mece")
-  mece-app     Streamlit   127.0.0.1:8502   mem_limit 768m   lectura de /data
-  mece-worker  supercronic                  mem_limit 1g     escritura de /data
-  volumen      ./data  (bind mount, persistente, respaldable)
+Se implementó la opción A con una mejora: en lugar de editar `/etc/cloudflared/config.yml`, que requiere `sudo` y es la configuración de RRHH, el proyecto tiene **su propio túnel** (`mece-nasa`) que corre como contenedor. RRHH no se tocó.
+
 ```
-- El puerto 8502 se publica solo en `127.0.0.1`, así que no se expone directamente a Internet.
-- Las credenciales de Earthdata van en `.env`, solo dentro de `mece-worker`. La app no las necesita.
-- Respaldo: un `tar` diario de `data/processed`, `data/spatial` y `data/catalog`, que pesa menos de 1 GB. `data/raw` se puede regenerar.
+Internet ─HTTPS─► Cloudflare ─┬─ túnel tunel-nginx (systemd, RRHH) ─► cardenal-shekers.online → localhost:80
+                              └─ túnel mece-nasa  (Docker, proyecto) ─► nasa.cardenal-shekers.online → app:8501
+
+docker compose (proyecto "mece", docker/docker-compose.yml)
+  mece_app      Streamlit          127.0.0.1:8502   mem_limit 768m
+  mece_tunnel   cloudflared        (sin puertos)    mem_limit 128m
+  mece_worker   pipeline de datos  perfil "worker"  mem_limit 1g
+  volumen       ../data  (bind mount, persistente)
+```
+
+### Operación
+```bash
+./docker/deploy.sh            # construye y levanta app + túnel
+./docker/deploy.sh worker     # además el worker (actualización cada 6 h)
+docker compose --env-file .env -f docker/docker-compose.yml logs -f app
+```
+- El `Dockerfile` instala las dependencias en una capa cacheable, así que un cambio de código redespliega en unos 80 s.
+- Las credenciales van en `.env`, nunca en el repositorio: `EARTHDATA_TOKEN` y `CF_CREDENTIALS_FILE` (credenciales del túnel en `~/.cloudflared/`).
+- El ID del túnel aparece en `docker/cloudflared/config.yml`. No es secreto, porque ya es visible en el CNAME público.
+
+### Lecciones del despliegue
+- `cloudflared tunnel route dns` lee `~/.cloudflared/config.yml` (túnel de RRHH) aunque se le indique otro túnel. Hay que usar `--config` con un archivo que solo contenga `origincert`.
+- netCDF4/HDF5 no es seguro entre hilos: toda E/S NetCDF del pipeline pasa por un candado (`NC_LOCK`).
+- La primera visita tras un redespliegue tarda ~10 s, porque importa las bibliotecas científicas y construye el globo. Las siguientes tardan ~1 s.
 
 ## 4. GitHub
 - Repositorio sin marca de herramientas de IA: sin líneas de coautoría automática, sin `CLAUDE.md` y sin la carpeta `.claude/`, que ya están en `.gitignore`.

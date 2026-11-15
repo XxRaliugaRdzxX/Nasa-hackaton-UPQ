@@ -6,7 +6,7 @@ Tiene dos módulos:
 - **Monitor casi en tiempo real (NRT):** condiciones actuales y anomalías, siempre con la fecha real de observación.
 - **Análisis histórico:** series desde 2003, anomalías, tendencias (OLS‑HAC, Mann‑Kendall estacional, Sen), mapas de tendencia con corrección FDR, correlaciones con desfase y reportes PDF/CSV por región.
 
-> **Estado:** Fase 0 completada (configuración, acceso a NASA y regiones de estudio). El plan completo está en [`docs/`](docs/README.md).
+> **En línea:** https://nasa.cardenal-shekers.online · **Estado:** sistema base desplegado con datos reales (clorofila MODIS-Aqua y SST MUR25). Plan en [`docs/`](docs/README.md) y guía de integración en [`docs/08_contratos_integracion.md`](docs/08_contratos_integracion.md).
 
 ## Inicio rápido
 ```bash

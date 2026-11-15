@@ -1,0 +1,94 @@
+# =============================================================================
+# Casos de estudio y almacenes regionales · Marine Ecosystem Change Explorer
+# -----------------------------------------------------------------------------
+# Principio rector (D14): la herramienta se invoca con
+#   (dataset_id, bbox, t0, t1, season)
+# Un caso de estudio es solo un juego de parámetros con nombre. Agregar una
+# región = agregar un bloque aquí; nunca se edita código.
+#
+# bbox = [lat_min, lat_max, lon_min, lon_max]  (grados, lon -180..180)
+# =============================================================================
+
+# Almacenes: zonas que el pipeline descarga y mantiene localmente (recortes de
+# los productos globales). Todo caso de estudio debe caber dentro de un almacén.
+# Cada archivo global de clorofila se descarga UNA vez y se recorta para todos.
+stores:
+  gom:
+    name: Golfo de México
+    bbox: [17.0, 32.0, -99.0, -79.0]
+  gulf_california:
+    name: Golfo de California
+    bbox: [21.0, 33.0, -116.0, -104.0]
+
+# Caso activo por defecto al abrir la aplicación
+default_case: grijalva_usumacinta
+
+cases:
+  grijalva_usumacinta:
+    name_es: Pluma Grijalva–Usumacinta
+    name_en: Grijalva–Usumacinta plume
+    region_es: Golfo de México · Tabasco y Campeche
+    region_en: Gulf of Mexico · Tabasco and Campeche
+    bbox: [18.0, 20.5, -94.0, -90.5]
+    t0: "2003-01"
+    t1: "2025-12"
+    datasets: [chl, sst]
+    marker: { lat: 18.62, lon: -92.68, label: Grijalva–Usumacinta }
+    summary_es: >
+      Zona costera bajo la influencia del segundo sistema fluvial más caudaloso de
+      México. Aquí se pregunta qué cambia, dónde, cuánto y si el cambio es
+      estadísticamente significativo.
+    summary_en: >
+      Coastal zone influenced by Mexico's second-largest river system. The
+      questions: what is changing, where, how much, and whether it is
+      statistically significant.
+
+  gom:
+    name_es: Golfo de México
+    name_en: Gulf of Mexico
+    region_es: Cuenca oceánica completa
+    region_en: Entire ocean basin
+    bbox: [18.0, 30.5, -98.0, -80.5]
+    t0: "2003-01"
+    t1: "2025-12"
+    datasets: [chl, sst]
+    marker: { lat: 25.0, lon: -90.0, label: Golfo de México }
+    summary_es: >
+      Visión de conjunto del Golfo: contraste entre plataformas costeras y aguas
+      oceánicas.
+    summary_en: >
+      Gulf-wide overview: coastal shelves versus open-ocean waters.
+
+  mississippi:
+    name_es: Delta del Mississippi
+    name_en: Mississippi Delta
+    region_es: Golfo de México · Luisiana
+    region_en: Gulf of Mexico · Louisiana
+    bbox: [27.5, 30.5, -92.5, -87.5]
+    t0: "2003-01"
+    t1: "2025-12"
+    datasets: [chl, sst]
+    marker: { lat: 29.0, lon: -89.4, label: Mississippi }
+    summary_es: >
+      La mayor descarga fluvial del Golfo; referencia para comparar con el
+      sistema Grijalva–Usumacinta.
+    summary_en: >
+      The largest river discharge into the Gulf; a reference to compare with
+      the Grijalva–Usumacinta system.
+
+  gulf_california:
+    name_es: Golfo de California
+    name_en: Gulf of California
+    region_es: Pacífico mexicano
+    region_en: Mexican Pacific
+    bbox: [23.0, 31.5, -114.9, -106.5]
+    t0: "2003-01"
+    t1: "2025-12"
+    datasets: [chl, sst]
+    marker: { lat: 27.5, lon: -110.5, label: Golfo de California }
+    summary_es: >
+      Prueba de fuego de la herramienta: otra región, mismos parámetros, cero
+      cambios de código.
+    summary_en: >
+      Acid test for the tool: a different region, same parameters, zero code
+      changes.

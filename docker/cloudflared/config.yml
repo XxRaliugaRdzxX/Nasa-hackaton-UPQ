@@ -1,0 +1,10 @@
+# Túnel propio del proyecto (D17). El ID no es secreto (aparece en el CNAME público);
+# las credenciales sí lo son y se montan desde fuera del repositorio (CF_CREDENTIALS_FILE).
+tunnel: f3bd357e-e487-40eb-b572-d5ce45716872
+credentials-file: /etc/cloudflared/credentials.json
+no-autoupdate: true
+
+ingress:
+  - hostname: nasa.cardenal-shekers.online
+    service: http://app:8501
+  - service: http_status:404
