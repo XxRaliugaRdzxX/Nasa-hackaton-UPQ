@@ -1,0 +1,52 @@
+# =============================================================================
+# Parámetros de análisis · ver docs/04_metodologia_estadistica.md
+# Todo lo de aquí se imprime en cada reporte para que sea reproducible.
+# =============================================================================
+
+climatology:
+  start: "2003-01"          # D04
+  end: "2022-12"
+  min_years_per_month: 15   # mínimo de años válidos por mes calendario
+
+trend_windows:              # D02, D03
+  chlorophyll: { start: "2003-01", end: "2025-12", product: modis_chl_monthly }
+  sst:         { start: "2003-01", end: "2025-12", product: mur25_sst_daily }
+  precipitation: { start: "2003-01", end: "2025-09", product: imerg_final_monthly }
+
+correlation_window: { start: "2003-01", end: "2025-09" }
+
+significance:
+  alpha: 0.05
+  fdr_alpha: 0.10           # Benjamini-Hochberg en mapas (Wilks, 2016)
+  hac_max_lag_months: 12    # Newey-West
+
+coverage:
+  min_region_fraction: 0.30   # % mínimo de píxeles válidos para aceptar un mes regional
+  min_pixel_months: 0.70      # % mínimo de meses válidos para tendencia por píxel
+  min_years_per_calendar_month: 10
+  min_record_years: 10
+
+correlation:
+  max_lag_months: 6
+  block_bootstrap_months: 12
+  n_bootstrap: 2000
+  wet_season_months: [6, 7, 8, 9, 10]
+
+anomaly_classes:            # |z|
+  normal: 1.0
+  unusual: 2.0              # >= 2 → extremo
+
+chlorophyll:
+  log_transform: true       # promedios y tendencias en log10
+  coastal_flag_km: 20       # píxeles a < 20 km de costa: "ópticamente complejos"
+
+nrt:
+  composite_days: 8         # composición móvil para clorofila y SST
+  precip_accumulations_days: [1, 7, 30]
+
+# Rangos fijos de color para que fechas distintas sean comparables
+map_styles:
+  chlorophyll: { cmap: algae,   vmin: 0.01, vmax: 30.0, scale: log }
+  sst:         { cmap: thermal, vmin: 18.0, vmax: 32.0, scale: linear }
+  precipitation: { cmap: rain,  vmin: 0.0,  vmax: 600.0, scale: linear }
+  anomaly:     { cmap: balance }

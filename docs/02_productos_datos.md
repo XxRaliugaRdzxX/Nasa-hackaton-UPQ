@@ -60,20 +60,36 @@ Diferencias de convenciones conocidas que el código debe manejar:
 ### 3.1 Principio
 Cada **región de análisis** es un par: una zona marina receptora más su cuenca terrestre aportante.
 
-| ID | Región | Polígono marino (chl, SST) | Polígono terrestre (precipitación, GLDAS) |
-|---|---|---|---|
-| `gom` | Golfo de México completo | Límite IHO "Gulf of Mexico" (Marine Regions, CC‑BY) | Cuencas que drenan al Golfo, de HydroBASINS (nivel 3–4). **Fase 2**, por el gran tamaño del Mississippi. |
-| `tabasco_coast` | Costa de Tabasco | Franja marina de 0 a 50 km desde la costa, entre los límites estatales de Tabasco (INEGI) | Cuencas costeras de Tabasco (HydroBASINS nivel 6–7) |
-| `grijalva_usumacinta` | Desembocadura Grijalva‑Usumacinta | Zona de pluma: semicírculo marino alrededor de la boca (Frontera, ~18.6 N, 92.65 W). Radio de trabajo de 60 km, **a validar con imágenes de pluma** | Cuenca completa Grijalva‑Usumacinta, México + Guatemala (HydroBASINS) |
-| `gom_offshore` | Golfo oceánico (referencia) | Zona IHO menos la franja de 100 km desde la costa | — |
+Definiciones **construidas y verificadas** (2026‑11‑15) con `mece regions build`. Parámetros en `config/regions.yaml`; figura de control en `docs/figuras/regiones_control.png`.
+
+| ID | Región | Polígono marino (chl, SST) | km² | Polígono terrestre (precipitación, GLDAS) | km² |
+|---|---|---|---|---|---|
+| `gom` | Golfo de México | Límite IHO "Gulf of Mexico" menos tierra (Natural Earth 10 m); solo el cuerpo de agua principal | 1 540 494 | 88 cuencas HydroBASINS nivel 6 con ≥ 25 % del contacto de su desembocadura en el Golfo (incluye Mississippi, Bravo, Grijalva‑Usumacinta, Yucatán norte y oeste de Cuba) | 5 481 987 |
+| `gom_offshore` | Golfo oceánico (referencia) | Golfo a más de 100 km de la costa (raster de distancia de 1 km) | 974 630 | — | — |
+| `tabasco_coast` | Costa de Tabasco | Mar a ≤ 50 km de la costa de Tabasco **y más cerca de ella que de cualquier otra costa**: los límites laterales son líneas de equidistancia con Veracruz y Campeche | 9 459 | 7 cuencas HydroBASINS nivel 6 con ≥ 50 % del contacto marino de su desembocadura frente a Tabasco. Excluye Coatzacoalcos (Veracruz) y Laguna de Términos (Campeche) | 137 232 |
+| `grijalva_usumacinta` | Desembocadura Grijalva‑Usumacinta | Radio de 60 km alrededor de la Barra de Frontera (18.62 N, 92.68 W), dentro del Golfo, sin lagunas costeras. **Definición operativa a validar con imágenes de pluma** | 6 284 | Cuenca completa HydroBASINS `MAIN_BAS 7060050920`, México + Guatemala (literatura: ~128 000 km²) | 126 963 |
 
 `gom_offshore` se agrega para contestar la pregunta "¿costa vs. océano?" con un contraste limpio.
 
+**Limitaciones conocidas de las definiciones:**
+- La península de Yucatán drena sobre todo de forma subterránea (karst) y hacia los dos mares. Su inclusión en las cuencas del Golfo es aproximada.
+- Los límites estatales de Natural Earth (escala 1:10 m) tienen errores de unos pocos km, despreciables frente a los píxeles de 4 a 25 km.
+
 ### 3.2 Construcción y versionado
-- Los polígonos se generan con un script reproducible (`src/mece/geospatial/build_regions.py`) a partir de fuentes públicas. Se guardan como **GeoJSON en EPSG:4326** en `data/spatial/regions/` y **se versionan en Git**.
-- Cada GeoJSON lleva sus metadatos: fuente, licencia, fecha, buffer aplicado y propósito (`marine` / `land`).
-- **Máscara tierra‑mar:** los productos oceánicos ya traen la tierra enmascarada. Además, el polígono marino se recorta con la línea de costa (GSHHG o Natural Earth 10 m), para que no se cuelen píxeles mixtos en el promedio.
-- **Asignación de píxeles:** `regionmask` (por centro de píxel) con ponderación por área (cos lat). Para regiones pequeñas en la malla de 0.25° (MUR25, GLDAS) se usa ponderación por fracción de solape, porque con pocos píxeles el criterio de centro sesga el resultado.
+- Los polígonos se generan con `mece regions build` (`src/mece/geospatial/build_regions.py`) a partir de fuentes públicas, que se descargan solas a `data/raw/ancillary/`:
+  - Marine Regions IHO (CC‑BY 4.0);
+  - Natural Earth 10 m (dominio público);
+  - HydroBASINS v1c (licencia HydroSHEDS).
+- Se guardan como **GeoJSON en EPSG:4326** en `data/spatial/regions/` y **se versionan en Git**. Pesan unos 1.6 MB en total.
+- Cada GeoJSON lleva sus metadatos: `region_id`, `part` (marine/land), nombres ES/EN, área, método, fuentes con licencia y fecha.
+- **Separación tierra/mar garantizada:**
+  1. Primero se simplifica el mar (300 m).
+  2. Después a la tierra se le resta el mar ya simplificado.
+  3. Al final se validan las geometrías.
+
+  Las pruebas (`tests/test_regions.py`) verifican que el solape sea < 1 km², que las geometrías sean válidas, que las regiones marinas estén dentro del Golfo y que la cuenca Grijalva‑Usumacinta tenga el área de la literatura.
+- **Memoria:** las operaciones caras (distancias de 50 y 100 km) se calculan con rasters de 1 km en lugar de búferes vectoriales. La construcción completa usa unos 540 MB y tarda unos 30 s. Se ejecuta con un tope de memoria del sistema operativo: `systemd-run --user --scope -p MemoryMax=1200M -p MemorySwapMax=0 mece regions build`.
+- **Asignación de píxeles (Fase 1):** `regionmask` por centro de píxel, con ponderación por área (cos lat). Para regiones pequeñas en la malla de 0.25° (MUR25, GLDAS) se usará ponderación por fracción de solape, porque con pocos píxeles el criterio de centro sesga el resultado.
 
 ## 4. Estrategia de adquisición
 

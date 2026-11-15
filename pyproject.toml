@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mece"
+version = "0.1.0"
+description = "Marine Ecosystem Change Explorer: monitoreo y análisis de tendencias de ecosistemas marinos del Golfo de México con datos de NASA"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Equipo Nasa-hackaton-UPQ" }]
+
+# Núcleo: adquisición, procesamiento, estadística y geoespacial
+dependencies = [
+    "earthaccess>=0.19",
+    "python-dotenv>=1.0",
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+    "typer>=0.12",
+    "requests>=2.31",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pyarrow>=15",
+    "scipy>=1.12",
+    "xarray>=2024.6",
+    "netCDF4>=1.7",
+    "h5netcdf>=1.3",
+    "geopandas>=1.0",
+    "shapely>=2.0",
+    "pyproj>=3.6",
+    "regionmask>=0.12",
+    "rioxarray>=0.15",
+    "statsmodels>=0.14",
+    "pymannkendall>=1.4.3",
+    "matplotlib>=3.8",
+    "cmocean>=4.0",
+]
+
+[project.optional-dependencies]
+dashboard = [
+    "streamlit>=1.39",
+    "folium>=0.17",
+    "streamlit-folium>=0.22",
+    "plotly>=5.22",
+]
+report = [
+    "jinja2>=3.1",
+    "weasyprint>=62",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "jupyterlab>=4.2",
+]
+
+[project.scripts]
+mece = "mece.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+mece = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

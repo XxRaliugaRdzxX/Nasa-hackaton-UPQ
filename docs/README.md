@@ -10,5 +10,6 @@
 | 06 | [Plan de trabajo y riesgos](06_plan_trabajo_riesgos.md) | Fases, tareas por equipo, complejidad, ruta crítica y matriz de riesgos |
 | 07 | [Despliegue](07_despliegue.md) | Servidor, Cloudflare Tunnel, Docker Compose y GitHub |
 | — | [Registro de decisiones](decisiones.md) | Decisiones propuestas, aprobadas y pendientes |
+| — | [Guía de contribución](CONTRIBUTING.md) | Ramas, commits, convenciones y manejo de datos |
 
 Los diagramas están en Mermaid y GitHub los muestra directamente.

@@ -1,0 +1,225 @@
+# =============================================================================
+# Catálogo de productos NASA · Marine Ecosystem Change Explorer
+# -----------------------------------------------------------------------------
+# Cobertura, concept IDs y patrones verificados en NASA CMR el 2026-11-15.
+# Unidades, _FillValue, orden de lat y dims verificados leyendo un archivo real
+# de cada producto el mismo día.
+# El pipeline vuelve a consultar CMR antes de descargar; las fechas de cobertura
+# NO se fijan aquí, solo las ventanas que usamos para analizar.
+#
+# Campos:
+#   variable        nombre interno común (chlorophyll | sst | precipitation | runoff)
+#   role            historical (refinado, entra en tendencias) | nrt | validation | ancillary
+#   level           final | nrt   (se guarda en cada registro)
+#   granule_pattern patrón del nombre en CMR (readable_granule_name, admite *)
+#   file_variable   nombre de la variable dentro del archivo
+#   group           grupo HDF5/NetCDF4 donde está la variable (null = raíz)
+#   units_native    unidades esperadas en el atributo `units` del archivo (se valida)
+#   units_target    unidades con las que se guarda en processed/
+#   conversion      clave de la conversión implementada en mece.processing.units
+#   valid_range     rango físico aceptado tras convertir (fuera → NaN)
+# =============================================================================
+
+region_bbox:            # recorte común al descargar (Golfo + 1° de margen)
+  lat_min: 17.0
+  lat_max: 32.0
+  lon_min: -99.0
+  lon_max: -79.0
+
+products:
+
+  # ---------------------------------------------------------------- CLOROFILA
+  modis_chl_monthly:
+    variable: chlorophyll
+    role: historical
+    level: final
+    daac: OB.DAAC
+    short_name: MODISA_L3m_CHL
+    version: "2022.0"
+    concept_id: C3380709133-OB_CLOUD
+    doi: 10.5067/AQUA/MODIS/L3M/CHL/2022.0
+    granule_pattern: "*.L3m.MO.CHL.chlor_a.4km.nc"
+    temporal_resolution: monthly
+    spatial_resolution: "4.64 km (1/24°)"
+    file_variable: chlor_a
+    group: null
+    units_native: "mg m^-3"
+    units_target: "mg m-3"
+    conversion: none
+    valid_range: [0.001, 100.0]
+    lat_order: descending
+    notes: >
+      L3 binning ya excluyó píxeles con banderas L2 (tierra, nubes, glint, falla
+      atmosférica…). Promediar en log10. Sesgo positivo en aguas costeras turbias.
+
+  modis_chl_nrt_daily:
+    variable: chlorophyll
+    role: nrt
+    level: nrt
+    daac: OB.DAAC
+    short_name: MODISA_L3m_CHL_NRT
+    version: "2022.0"
+    concept_id: C3380709124-OB_CLOUD
+    doi: null
+    granule_pattern: "*.L3m.DAY.CHL.chlor_a.4km.NRT.nc"
+    temporal_resolution: daily
+    spatial_resolution: "4.64 km (1/24°)"
+    file_variable: chlor_a
+    group: null
+    units_native: "mg m^-3"
+    units_target: "mg m-3"
+    conversion: none
+    valid_range: [0.001, 100.0]
+    lat_order: descending
+    notes: Monitoreo mientras Aqua opere (fin de misión anunciado ago-2026).
+
+  pace_chl_nrt_daily:
+    variable: chlorophyll
+    role: nrt
+    level: nrt
+    daac: OB.DAAC
+    short_name: PACE_OCI_L3M_BGC_NRT
+    version: "3.2"
+    concept_id: C4184125829-OB_CLOUD
+    doi: null
+    granule_pattern: "*.L3m.DAY.BGC.V3_2.4km.NRT.nc"
+    temporal_resolution: daily
+    spatial_resolution: "4.64 km (1/24°)"
+    file_variable: chlor_a
+    group: null
+    units_native: "mg m^-3"
+    units_target: "mg m-3"
+    conversion: none
+    valid_range: [0.001, 100.0]
+    lat_order: descending
+    notes: >
+      Continuidad del monitoreo. NO se mezcla con MODIS en tendencias (D02).
+      Sesgo PACE-MODIS se cuantifica en el traslape 2024-2026.
+
+  # ---------------------------------------------------------------------- SST
+  mur25_sst_daily:
+    variable: sst
+    role: historical          # también alimenta el monitoreo NRT (mismo producto)
+    level: final
+    daac: PO.DAAC
+    short_name: MUR25-JPL-L4-GLOB-v04.2
+    version: "4.2"
+    concept_id: C2036880657-POCLOUD
+    doi: 10.5067/GHM25-4FJ42
+    granule_pattern: "*-JPL-L4_GHRSST-SSTfnd-MUR25-GLOB-v02.0-fv04.2*"
+    temporal_resolution: daily
+    spatial_resolution: "0.25°"
+    file_variable: analysed_sst
+    group: null
+    units_native: "kelvin"
+    units_target: "degC"
+    conversion: kelvin_to_celsius
+    valid_range: [-2.0, 40.0]
+    lat_order: ascending
+    notes: >
+      SST de fundación, L4 interpolado (no es observación directa por píxel).
+      int16 con scale_factor 0.001 y add_offset 298.15 (xarray lo decodifica).
+      Usar `mask` para excluir tierra/hielo y `analysis_error` como incertidumbre.
+      Asignar el día por la fecha del nombre de archivo (09:00 UTC); el
+      time_start de CMR es la víspera a las 21:00. Mensual = media de días (D01).
+
+  modis_nsst_monthly:
+    variable: sst
+    role: validation
+    level: final
+    daac: OB.DAAC
+    short_name: MODISA_L3m_NSST
+    version: R2019.0
+    concept_id: C1615929573-OB_DAAC
+    doi: null
+    granule_pattern: "*.L3m.MO.NSST.sst.4km.nc"
+    temporal_resolution: monthly
+    spatial_resolution: "4.64 km (1/24°)"
+    file_variable: sst
+    group: null
+    units_native: "degree_C"
+    units_target: "degC"
+    conversion: none
+    valid_range: [-2.0, 40.0]
+    lat_order: descending
+    quality_variable: qual_sst
+    max_quality_level: 1
+    notes: >
+      SST nocturna 11 µm; solo contraste con MUR25 y cruces píxel a píxel con
+      clorofila. qual_sst (convención OBPG): 0=mejor, 1=buena, 2=dudosa; el L3m
+      solo contiene 0-2. Se conservan qual_sst <= 1 (verificado 2026-11-15:
+      98 % de píxeles del Golfo en ago-2025 son 0). int16 con scale_factor 0.005.
+
+  # ------------------------------------------------------------ PRECIPITACIÓN
+  imerg_final_monthly:
+    variable: precipitation
+    role: historical
+    level: final
+    daac: GES DISC
+    short_name: GPM_3IMERGM
+    version: "07"
+    concept_id: C2723754851-GES_DISC
+    doi: 10.5067/GPM/IMERG/3B-MONTH/07
+    granule_pattern: "*3B-MO.MS.MRG.3IMERG.*.V07B.HDF5"
+    temporal_resolution: monthly
+    spatial_resolution: "0.1°"
+    file_variable: precipitation
+    group: Grid
+    units_native: "mm/hr"
+    units_target: "mm month-1"
+    conversion: mm_per_hour_to_mm_per_month
+    valid_range: [0.0, 3000.0]
+    lat_order: ascending
+    dims_order: [time, lon, lat]   # hay que transponer a (time, lat, lon)
+    notes: >
+      Serie V07 cerrada en 2025-09-30 por transición a V08 (D03). Cuando exista
+      V08 Final se reprocesa todo; nunca se concatenan versiones.
+
+  imerg_late_daily:
+    variable: precipitation
+    role: nrt
+    level: nrt
+    daac: GES DISC
+    short_name: GPM_3IMERGDL
+    version: "07"
+    concept_id: C2723754859-GES_DISC
+    doi: 10.5067/GPM/IMERGDL/DAY/07
+    granule_pattern: "*3B-DAY-L.MS.MRG.3IMERG.*.nc4"
+    temporal_resolution: daily
+    spatial_resolution: "0.1°"
+    file_variable: precipitation
+    group: null
+    units_native: "mm/day"
+    units_target: "mm day-1"
+    conversion: none
+    valid_range: [0.0, 2000.0]
+    lat_order: ascending
+    dims_order: [time, lon, lat]
+    notes: >
+      Monitoreo (acumulados 1/7/30 d) y meses posteriores a 2025-09 como
+      PROVISIONAL; excluidos de tendencias. Sub-versión V07C (Final es V07B).
+
+  # ---------------------------------------------- HIDROLOGÍA (Fase 4, opcional)
+  gldas_noah_monthly:
+    variable: runoff
+    role: ancillary
+    level: final
+    daac: GES DISC
+    short_name: GLDAS_NOAH025_M
+    version: "2.1"
+    concept_id: C1342986036-GES_DISC
+    doi: 10.5067/SXAVCZFAQLNO
+    granule_pattern: "*GLDAS_NOAH025_M.A*.021.nc4"
+    temporal_resolution: monthly
+    spatial_resolution: "0.25°"
+    file_variable: Qs_acc
+    extra_variables: [Qsb_acc, SoilMoi0_10cm_inst]
+    group: null
+    units_native: "kg m-2"
+    units_target: "mm month-1"
+    conversion: gldas_3h_acc_to_mm_per_month
+    valid_range: [0.0, 2000.0]
+    lat_order: ascending
+    notes: >
+      Escorrentía MODELADA, no equivale a caudal medido. Valor mensual = media de
+      acumulados de 3 h → ×8 × días del mes. Verificar antes de incorporar.

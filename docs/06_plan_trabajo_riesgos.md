@@ -10,6 +10,8 @@ Equipos:
 - **E4** Integración y reportes
 
 ## Fase 0 · Cimientos (semana 0, en paralelo)
+**Estado (2026‑11‑15):** completadas 0.1, 0.3, 0.4 y 0.5. La 0.2 está hecha para la cuenta principal; falta que cada integrante cree su cuenta y ejecute `mece check-access`.
+
 | # | Tarea | Resp. | Cx | Entregable |
 |---|---|---|---|---|
 | 0.1 | Repositorio, estructura, `pyproject`, ruff, pytest y CI | E4 | S | Repo con CI en verde |

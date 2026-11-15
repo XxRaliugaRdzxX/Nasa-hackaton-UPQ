@@ -1,0 +1,68 @@
+# =============================================================================
+# Regiones de estudio · ver docs/02_productos_datos.md §3
+# Cada región es un PAR: zona marina receptora (clorofila, SST) + cuenca
+# terrestre aportante (precipitación, GLDAS). Los GeoJSON se generan con
+# `mece regions build` en data/spatial/regions/ y SÍ se versionan en Git.
+# =============================================================================
+
+regions:
+
+  gom:
+    name_es: Golfo de México
+    name_en: Gulf of Mexico
+    marine: gom_marine.geojson
+    land: gom_basins_land.geojson
+    description_es: >
+      Golfo completo según el límite IHO; cuencas de HydroBASINS (nivel 6) cuya
+      desembocadura vierte al Golfo, incluida la del Mississippi.
+    description_en: >
+      Entire Gulf (IHO limits); HydroBASINS level-6 basins draining into the Gulf,
+      including the Mississippi.
+
+  gom_offshore:
+    name_es: Golfo oceánico (referencia)
+    name_en: Offshore Gulf (reference)
+    marine: gom_offshore_marine.geojson
+    land: null
+    description_es: Golfo a más de 100 km de la costa; contraste con las zonas costeras.
+    description_en: Gulf waters more than 100 km offshore; contrast with coastal zones.
+
+  tabasco_coast:
+    name_es: Costa de Tabasco
+    name_en: Tabasco coast
+    marine: tabasco_coast_marine.geojson
+    land: tabasco_basins_land.geojson
+    description_es: >
+      Mar a 0-50 km de la costa de Tabasco, más cerca de ella que de otra costa;
+      cuencas (HydroBASINS nivel 6) que desembocan frente a Tabasco.
+    description_en: >
+      Waters 0-50 km off the Tabasco coast and closer to it than to any other
+      coast; HydroBASINS level-6 basins whose outlet faces Tabasco.
+
+  grijalva_usumacinta:
+    name_es: Desembocadura Grijalva-Usumacinta
+    name_en: Grijalva-Usumacinta river mouth
+    marine: gu_plume_marine.geojson
+    land: gu_basin_land.geojson
+    description_es: >
+      Zona de pluma: radio de 60 km alrededor de la boca (Barra de Frontera), a
+      validar con imágenes de pluma. Cuenca completa México-Guatemala (HydroBASINS).
+    description_en: >
+      Plume zone: 60 km radius around the mouth (Barra de Frontera), to be
+      validated with plume imagery. Full Mexico-Guatemala basin (HydroBASINS).
+
+# -----------------------------------------------------------------------------
+# Parámetros de construcción (usados por `mece regions build`)
+# Cambiarlos y volver a construir; el resultado queda en los metadatos.
+# -----------------------------------------------------------------------------
+build:
+  metric_crs: "+proj=laea +lat_0=24 +lon_0=-90 +datum=WGS84 +units=m +no_defs"
+  simplify_m: 300                 # simplificación (<< pixel de 4 km)
+  offshore_buffer_km: 100         # gom_offshore = Golfo a > 100 km de costa
+  tabasco_strip_km: 50            # ancho de la franja marina de Tabasco
+  plume_center: { lat: 18.62, lon: -92.68 }   # Barra de Frontera (boca del Grijalva)
+  plume_radius_km: 60
+  gu_main_basin_id: 7060050920    # HydroBASINS MAIN_BAS (lev06) · 127 388 km²
+  # Una cuenca "vierte" a un mar si esa fracción del contacto de su desembocadura cae en él
+  tabasco_outlet_min_frac: 0.5    # medido sobre el contacto con el Golfo
+  gom_outlet_min_frac: 0.25       # medido sobre todo el contacto con agua (incluye estuarios)

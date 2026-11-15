@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "gu_plume_marine.tmp",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"xy_coordinate_resolution": 1e-05,
+"features": [
+{ "type": "Feature", "properties": { "region_id": "grijalva_usumacinta", "part": "marine", "name_es": "Desembocadura Grijalva-Usumacinta", "name_en": "Grijalva-Usumacinta river mouth", "area_km2": 6283.7, "method": "Radio de 60 km alrededor de (18.62, -92.68), dentro del Golfo IHO. Definición operativa a validar", "sources": "Flanders Marine Institute (2018). IHO Sea Areas v3. marineregions.org [CC-BY 4.0]; Natural Earth 10m land [Public domain]", "created": "2026-11-15T19:06:30Z" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -93.20801, 18.4437 ], [ -93.2211, 18.45504 ], [ -93.24407, 18.55527 ], [ -93.248, 18.61013 ], [ -93.23905, 18.71614 ], [ -93.20926, 18.81682 ], [ -93.18645, 18.86545 ], [ -93.12639, 18.95517 ], [ -93.04907, 19.03201 ], [ -92.95746, 19.09299 ], [ -92.8551, 19.13574 ], [ -92.74594, 19.15861 ], [ -92.63422, 19.16071 ], [ -92.52427, 19.14195 ], [ -92.42037, 19.10307 ], [ -92.32653, 19.04556 ], [ -92.24639, 18.97166 ], [ -92.18302, 18.88424 ], [ -92.13885, 18.78666 ], [ -92.12048, 18.71133 ], [ -92.12316, 18.70091 ], [ -92.13332, 18.6931 ], [ -92.29234, 18.67686 ], [ -92.40514, 18.67106 ], [ -92.58981, 18.62479 ], [ -92.68102, 18.62287 ], [ -92.69587, 18.61563 ], [ -92.69631, 18.60638 ], [ -92.70339, 18.59611 ], [ -92.72631, 18.58763 ], [ -92.75937, 18.53673 ], [ -92.80686, 18.49418 ], [ -92.85667, 18.46591 ], [ -92.93764, 18.44626 ], [ -93.14241, 18.44132 ], [ -93.17839, 18.44264 ], [ -93.19097, 18.44721 ], [ -93.20801, 18.4437 ] ] ] } }
+]
+}
