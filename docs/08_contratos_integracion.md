@@ -84,3 +84,26 @@ mece pipeline precompute [--case id]  # mapas de tendencia a resolución complet
 | `gulf_california` | 21–33 N, 116–104 W | ídem | ídem |
 
 **Regla de oro:** la interfaz **nunca calcula con datos incompletos**. Si faltan meses, muestra el avance de la descarga.
+
+## 5. Interfaz (D16): componentes interactivos
+
+La interfaz combina Streamlit con **componentes propios** (`st.components.v2`, bidireccionales), definidos en `dashboard/components.py`. Son solo presentación: reciben datos ya calculados y devuelven eventos (`select`, `analyze`) a Python.
+
+| Componente | Tecnología | Interacción |
+|---|---|---|
+| `globe` | globe.gl 2.46.2 (Three.js) | 4 capas en vivo (TSM MUR25, clorofila MODIS NRT, Tierra de noche, Blue Marble); clic en una región para seleccionarla; tooltip; lectura del valor bajo el cursor; rotación, centrar, zoom y pantalla completa; anillos pulsantes; arcos "aporte continental" cuenca→mar; vuelo de cámara al cambiar de región |
+| `mission_bar` | HTML/CSS/JS | Emblema orbital animado y reloj UTC en vivo |
+| `kpis` | HTML/CSS/JS | Conteo animado, inclinación 3D al pasar el cursor y medidor de z con zonas significativas (\|z\| > 1.96) |
+| `region_cards` | HTML/CSS/JS | Tarjetas con brillo al pasar el cursor; clic para seleccionar la región |
+
+Tema global: `dashboard/theme.py` (fondo espacial animado, paneles de vidrio, menú con degradado, cinta de telemetría).
+
+### Texturas del globo
+`mece pipeline globe` genera `data/spatial/globe/tex_{sst,chl}.jpg`:
+- El océano es el dato real coloreado y la tierra es Blue Marble atenuada.
+- Se acompaña de `grid_{sst,chl}.json`, una rejilla a 1° para leer el valor bajo el cursor.
+- La app las publica en `/app/static/globe/` (`enableStaticServing = true`).
+
+**Para agregar una capa al globo**, hay que generar su textura y su rejilla con `mece.visualization.textures` y añadir una entrada en `LAYERS` (JavaScript de `components.py`).
+
+> Detalle técnico: three-globe usa d3-geo, que espera los polígonos en sentido **horario**. En sentido antihorario, una caja se interpreta como "todo el planeta excepto la caja".

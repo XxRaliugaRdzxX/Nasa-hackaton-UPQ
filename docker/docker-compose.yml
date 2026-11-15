@@ -31,6 +31,8 @@ services:
       - ../data:/app/data
     mem_limit: 1g
     cpus: 1.5
+    healthcheck:
+      disable: true   # el worker no sirve HTTP; la verificación de la imagen es para la app
     depends_on: [app]
 
   tunnel:

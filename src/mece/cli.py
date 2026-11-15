@@ -114,6 +114,11 @@ def pipeline_globe() -> None:
 
     typer.echo(pipeline.globe_texture())
     typer.echo(pipeline.coastline_110m())
+    try:
+        typer.echo(pipeline.globe_chl())
+    except Exception as exc:  # noqa: BLE001 — la capa de clorofila es opcional
+        typer.secho(f"clorofila global no disponible: {exc}", fg="yellow")
+    typer.echo(pipeline.globe_textures())
 
 
 @pipeline_app.command("precompute")
@@ -134,6 +139,11 @@ def pipeline_bootstrap() -> None:
 
     pipeline.coastline_110m()
     pipeline.globe_texture()
+    try:
+        pipeline.globe_chl()
+    except Exception:  # noqa: BLE001
+        pass
+    pipeline.globe_textures()
     pipeline.fetch("chl")
     pipeline.fetch("sst")
     pipeline.precompute()

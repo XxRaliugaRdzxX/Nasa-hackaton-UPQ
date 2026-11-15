@@ -42,5 +42,7 @@ def test_series_has_anomaly_and_sen_lines():
     s = pd.Series(np.linspace(0, 1, 48), index=idx)
     tr = TrendResult(0.25, 0.0, 0.01, 2.5, 48, True)
     fig = fig_series(s, tr, "°C")
-    assert [d.name for d in fig.data] == ["anomalía mensual", "tendencia (Sen)"]
-    assert fig.data[1].line.dash == "dash"
+    names = [d.name for d in fig.data]
+    assert "anomalía mensual" in names and "tendencia (Sen)" in names
+    sen = next(d for d in fig.data if d.name == "tendencia (Sen)")
+    assert sen.line.dash == "dash"

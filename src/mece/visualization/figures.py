@@ -18,26 +18,29 @@ from mece.catalog import BBox, Region
 
 # ------------------------------------------------------------------ tokens
 TOK = {
-    "page": "#0d0d0d",
-    "surface": "#1a1a19",
-    "surface2": "#222221",
-    "ink": "#f0efec",
-    "ink2": "#c3c2b7",
-    "muted": "#898781",
-    "grid": "#2c2c2a",
-    "base": "#383835",
-    "accent": "#3987e5",
-    "accent2": "#d95926",
-    "nonsig": "#2e2e2c",
-    "land": "#22221d",
+    "page": "#020617",
+    "surface": "#0f172a",
+    "surface2": "#111c33",
+    "ink": "#f1f5f9",
+    "ink2": "#cbd5e1",
+    "muted": "#94a3b8",
+    "grid": "rgba(148,163,184,0.10)",
+    "base": "rgba(148,163,184,0.28)",
+    "accent": "#22d3ee",
+    "accent2": "#fbbf24",
+    "warm": "#fb7185",
+    "cool": "#38bdf8",
+    "nonsig": "#2f4566",
+    "land": "#0b1324",
     "ocean_deep": "#0b1a2e",
+    "coast": "#7dd3fc",
 }
 DIVERGING = [
-    [0.00, "#1c5cab"],
-    [0.22, "#3987e5"],
-    [0.50, "#383835"],
-    [0.78, "#e66767"],
-    [1.00, "#e34948"],
+    [0.00, "#1e40af"],
+    [0.22, "#38bdf8"],
+    [0.50, "#1e293b"],
+    [0.78, "#fb7185"],
+    [1.00, "#e11d48"],
 ]
 FONT = {
     "family": 'system-ui, -apple-system, "Segoe UI", sans-serif',
@@ -63,7 +66,7 @@ def _base_layout(**kw) -> dict:
         "plot_bgcolor": "rgba(0,0,0,0)",
         "font": FONT,
         "margin": {"l": 54, "r": 10, "t": 8, "b": 42},
-        "hoverlabel": {"bgcolor": TOK["surface"], "bordercolor": TOK["base"], "font": FONT},
+        "hoverlabel": {"bgcolor": "rgba(2,6,23,0.92)", "bordercolor": TOK["accent"], "font": FONT},
     } | kw
 
 
@@ -426,7 +429,12 @@ def fig_trend_map(
                 text=[marker.get("label", "")],
                 textposition="bottom center",
                 textfont={"color": TOK["ink2"], "size": 11},
-                marker={"color": TOK["ink"], "size": 9, "symbol": "triangle-up"},
+                marker={
+                    "color": TOK["accent2"],
+                    "size": 11,
+                    "symbol": "triangle-up",
+                    "line": {"color": "#020617", "width": 1},
+                },
                 hoverinfo="skip",
                 showlegend=False,
             )
@@ -464,18 +472,43 @@ def fig_series(
     labels: tuple[str, str] = ("anomalía mensual", "tendencia (Sen)"),
     transform=None,
 ) -> go.Figure:
-    """Anomalías (azul, 1.6 px) + recta de Sen (naranja, 2 px, punteada).
+    """Anomalías con relleno cálido/frío + recta de Sen luminosa y selector de rango.
 
     `transform` permite mostrar en otra escala (p. ej. log10 → %) sin cambiar el cálculo.
     """
     s = series.dropna()
     tr = transform or (lambda v: v)
     t = np.asarray(s.index.year + (s.index.month - 0.5) / 12.0)
+    y = np.asarray(tr(s.to_numpy()), float)
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
             x=s.index,
-            y=tr(s.to_numpy()),
+            y=np.where(y > 0, y, 0),
+            mode="lines",
+            line={"width": 0},
+            fill="tozeroy",
+            fillcolor="rgba(251,113,133,0.30)",
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=s.index,
+            y=np.where(y < 0, y, 0),
+            mode="lines",
+            line={"width": 0},
+            fill="tozeroy",
+            fillcolor="rgba(56,189,248,0.30)",
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=s.index,
+            y=y,
             name=labels[0],
             mode="lines",
             line={"color": TOK["accent"], "width": 1.6},
@@ -483,25 +516,112 @@ def fig_series(
         )
     )
     if trend is not None and np.isfinite(trend.slope_per_decade):
-        yline = trend.intercept + trend.slope_per_decade / 10 * (t - t[0])
+        yline = np.asarray(tr(trend.intercept + trend.slope_per_decade / 10 * (t - t[0])), float)
         fig.add_trace(
             go.Scatter(
                 x=s.index,
-                y=tr(yline),
+                y=yline,
+                mode="lines",
+                hoverinfo="skip",
+                showlegend=False,
+                line={"color": "rgba(251,191,36,0.25)", "width": 9},
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=s.index,
+                y=yline,
                 name=labels[1],
                 mode="lines",
-                line={"color": TOK["accent2"], "width": 2, "dash": "dash"},
+                line={"color": TOK["accent2"], "width": 2.4, "dash": "dash"},
                 hoverinfo="skip",
             )
         )
     axis = {"gridcolor": TOK["grid"], "linecolor": TOK["base"], "tickfont": FONT}
+    btn = {
+        "bgcolor": "rgba(15,23,42,0.85)",
+        "activecolor": "#0ea5e9",
+        "bordercolor": TOK["base"],
+        "borderwidth": 1,
+        "font": {**FONT, "color": TOK["ink"]},
+    }
     fig.update_layout(
         **_base_layout(
             height=height,
-            xaxis=axis | {"zeroline": False},
-            yaxis=axis | {"title": {"text": units, "font": FONT}, "zerolinecolor": TOK["base"]},
-            legend={"orientation": "h", "y": 1.12, "x": 0, "font": FONT},
+            xaxis=axis
+            | {
+                "zeroline": False,
+                "showspikes": True,
+                "spikecolor": TOK["accent"],
+                "spikethickness": 1,
+                "spikedash": "dot",
+                "spikemode": "across",
+                "rangeselector": btn
+                | {
+                    "buttons": [
+                        {"count": 5, "label": "5A", "step": "year", "stepmode": "backward"},
+                        {"count": 10, "label": "10A", "step": "year", "stepmode": "backward"},
+                        {"step": "all", "label": "∞"},
+                    ],
+                    "x": 0,
+                    "y": 1.02,
+                },
+                "rangeslider": {
+                    "visible": True,
+                    "thickness": 0.07,
+                    "bgcolor": "rgba(15,23,42,0.6)",
+                    "bordercolor": TOK["base"],
+                },
+            },
+            yaxis=axis
+            | {"title": {"text": units, "font": FONT}, "zerolinecolor": "rgba(226,232,240,0.35)"},
+            legend={"orientation": "h", "y": 1.13, "x": 1, "xanchor": "right", "font": FONT},
             hovermode="x unified",
+            margin={"l": 54, "r": 10, "t": 30, "b": 20},
+        )
+    )
+    return fig
+
+
+def fig_stripes(series: pd.Series, units: str, transform=None, height: int = 130) -> go.Figure:
+    """Franjas de anomalía anual (estilo 'warming stripes'): un vistazo a 23 años."""
+    s = series.dropna()
+    tr = transform or (lambda v: v)
+    annual = s.groupby(s.index.year).mean()
+    vals = np.asarray(tr(annual.to_numpy()), float)
+    lim = float(np.nanmax(np.abs(vals))) or 1.0
+    stripes = [
+        [0.0, "#0c2a6b"],
+        [0.2, "#1d4ed8"],
+        [0.4, "#7dd3fc"],
+        [0.5, "#e2e8f0"],
+        [0.6, "#fda4af"],
+        [0.8, "#e11d48"],
+        [1.0, "#7f1d1d"],
+    ]
+    fig = go.Figure(
+        go.Bar(
+            x=annual.index.astype(str),
+            y=np.ones_like(vals),
+            marker={
+                "color": vals,
+                "colorscale": stripes,
+                "cmin": -lim,
+                "cmax": lim,
+                "line": {"width": 0},
+            },
+            customdata=vals,
+            hovertemplate="%{x} · %{customdata:+.3f} " + units + "<extra></extra>",
+        )
+    )
+    fig.update_layout(
+        **_base_layout(
+            height=height,
+            bargap=0,
+            margin={"l": 0, "r": 0, "t": 0, "b": 22},
+            xaxis={"showgrid": False, "tickfont": FONT, "linecolor": "rgba(0,0,0,0)", "dtick": 2},
+            yaxis={"visible": False, "range": [0, 1]},
+            showlegend=False,
         )
     )
     return fig

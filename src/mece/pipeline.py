@@ -97,6 +97,56 @@ def coastline_110m() -> Path:
     return folder / "ne_110m_coastline.geojson"
 
 
+def globe_chl() -> Path:
+    """Clorofila global del último mes NRT (MODIS-Aqua 9 km) para el globo."""
+    import earthaccess
+
+    from mece.acquisition.auth import login
+
+    login()
+    res = earthaccess.search_data(
+        concept_id="C3380709124-OB_CLOUD",
+        granule_name="*.L3m.MO.CHL.chlor_a.9km.NRT.nc",
+        temporal=((date.today() - timedelta(days=120)).isoformat(), date.today().isoformat()),
+    )
+    if not res:
+        raise RuntimeError("Sin clorofila mensual NRT reciente")
+    g = sorted(res, key=lambda x: x["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"])[
+        -1
+    ]
+    month = g["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"][:7]
+    tmp = D.data_root() / "tmp" / "chl_globe"
+    tmp.mkdir(parents=True, exist_ok=True)
+    try:
+        f = Path(earthaccess.download([g], str(tmp), show_progress=False)[0])
+        with D.NC_LOCK, xr.open_dataset(f) as ds:
+            chl = ds["chlor_a"].load()
+    finally:
+        for x in tmp.glob("*"):
+            x.unlink(missing_ok=True)
+    chl = chl.where((chl > 0.001) & (chl < 100)).rename("chlor_a")
+    chl.attrs = {"units": "mg m-3", "month": month, "source": "MODIS-Aqua L3m 9km NRT"}
+    out = D.data_root() / "spatial" / "globe" / "chl_global_latest.nc"
+    D._atomic_to_netcdf(chl, out)
+    D.update_status("globe", "chl", {"state": "ready", "date": month})
+    return out
+
+
+def globe_textures() -> dict:
+    """Texturas JPEG + rejillas JSON para el globo (SST y clorofila)."""
+    from mece.visualization import textures as TX
+
+    g = D.data_root() / "spatial" / "globe"
+    land = g / "ne_110m_land.geojson"
+    out = {"sst": TX.build_sst_texture(g / "sst_global_latest.nc", land, g)}
+    chl_nc = g / "chl_global_latest.nc"
+    if chl_nc.exists():
+        with xr.open_dataarray(chl_nc) as da:
+            chl = da.load()
+        out["chl"] = TX.build_chl_texture(chl, land, g, chl.attrs.get("month", ""))
+    return out
+
+
 # ------------------------------------------------------------ precálculo
 def precompute(cases: list[str] | None = None) -> dict:
     """Series, tendencia y mapa de tendencia para cada caso y dataset (periodo completo)."""

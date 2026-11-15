@@ -10,6 +10,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Bibliotecas del sistema que necesitan las ruedas de rasterio/GDAL
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libexpat1 \
+ && rm -rf /var/lib/apt/lists/*
+
 # 1) Dependencias (capa cacheable): se instala el proyecto con un paquete vacío, así un
 #    cambio de código no obliga a reinstalar todo. requirements.txt fija las versiones.
 COPY pyproject.toml README.md LICENSE requirements.txt ./
