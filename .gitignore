@@ -1,0 +1,29 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# --- Secretos y configuración local ---
+.env
+.netrc
+*.pem
+config/*.local.yaml
+
+# --- Datos (se regeneran con el pipeline; no se versionan) ---
+# Se ignora todo dentro de data/ salvo la estructura de carpetas y los polígonos de regiones
+data/**
+!data/**/
+!data/**/.gitkeep
+!data/spatial/regions/*.geojson
+
+# --- Herramientas locales ---
+.claude/
+CLAUDE.md
+.vscode/
+.idea/
+.DS_Store
