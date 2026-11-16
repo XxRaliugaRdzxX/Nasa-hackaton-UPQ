@@ -20,6 +20,8 @@ regions_app = typer.Typer(help="Regiones de estudio", no_args_is_help=True)
 app.add_typer(regions_app, name="regions")
 pipeline_app = typer.Typer(help="Preparación de datos (worker)", no_args_is_help=True)
 app.add_typer(pipeline_app, name="pipeline")
+research_app = typer.Typer(help="Investigación del equipo (portada de Colab)", no_args_is_help=True)
+app.add_typer(research_app, name="research")
 
 
 @app.callback()
@@ -147,6 +149,24 @@ def pipeline_bootstrap() -> None:
     pipeline.fetch("chl")
     pipeline.fetch("sst")
     pipeline.precompute()
+
+
+@research_app.command("fetch")
+def research_fetch() -> None:
+    """Descarga los productos de la investigación (solo los meses que falten)."""
+    from mece.research import fetch
+
+    for r in fetch.fetch_all():
+        typer.echo(r)
+
+
+@research_app.command("run")
+def research_run() -> None:
+    """Reproduce la investigación completa y guarda data/research/results."""
+    from mece.research import pipeline
+
+    res = pipeline.run()
+    typer.secho(f"OK · resultados {res['meta']['generated']}", fg="green")
 
 
 if __name__ == "__main__":

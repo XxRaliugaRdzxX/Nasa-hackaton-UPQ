@@ -107,3 +107,20 @@ Tema global: `dashboard/theme.py` (fondo espacial animado, paneles de vidrio, me
 **Para agregar una capa al globo**, hay que generar su textura y su rejilla con `mece.visualization.textures` y añadir una entrada en `LAYERS` (JavaScript de `components.py`).
 
 > Detalle técnico: three-globe usa d3-geo, que espera los polígonos en sentido **horario**. En sentido antihorario, una caja se interpreta como "todo el planeta excepto la caja".
+
+## 6. Investigación del equipo (D18–D21)
+
+El cuaderno de Colab del equipo (`Colab/`) se portó al paquete `mece.research` y se reproduce en el
+servidor. La web **no ejecuta cálculos**: solo lee los resultados.
+
+| Paso | Comando | Salida |
+|---|---|---|
+| Descarga (MODIS chl/SST/nFLH, VIIRS, IMERG + auxiliares) | `mece research fetch` | `data/research/raw/<producto>/<AAAAMM>.nc`, `data/research/ancillary/` |
+| Cálculo completo (~2 min, ~1.2 GB de RAM) | `mece research run` | `data/research/results/` (`results.json`, `series.parquet`, `precip.parquet`, `map_trend_{chl,sst}.nc`, `regions.geojson`) |
+
+- Configuración: `config/research.yaml` (periodo, cajas de las 7 regiones, 5 cuencas, pares lluvia→costa, modelos).
+- Código: `src/mece/research/{fetch,geometry,pipeline}.py`, que replica los pasos 1.5–12b del cuaderno, más la validación con MUR25 y el ANOVA por periodos.
+- Interfaz: `dashboard/research_view.py` + `research_text.py` (pestañas de Análisis) y `dashboard/story.py` + `story_text.py` (Historia). Los textos están en es/en/pt.
+- Las figuras originales del equipo están en `dashboard/static/evidence/` (galería de Análisis).
+- Titulares de clorofila = serie corregida MODIS+VIIRS (D18). Reproducción verificada contra el cuaderno: SST +0.44 a +0.55 °C/década; clorofila corregida Golfo −4.7 %, Banco −10.6 %, Florida −7.4 %, profundo −6.5 %/década; lluvia Grijalva −5.1 %/década (p = 0.011).
+- Ejecutar los procesos pesados con un límite de memoria: `systemd-run --user --scope -p MemoryMax=1500M -p MemorySwapMax=0 mece research run`.

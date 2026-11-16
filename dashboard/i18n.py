@@ -3,6 +3,7 @@
 T = {
     "es": {
         "brand_sub": "Trend Detective · NASA Space Apps",
+        "nav_story": "Historia",
         "nav_region": "Región",
         "nav_analysis": "Análisis",
         "badge_real": "DATOS REALES · NASA",
@@ -53,7 +54,7 @@ T = {
         "not_ready_body": "El servidor está descargando y recortando los productos de NASA. Esta vista se completa sola cuando termina; puedes explorar el globo mientras tanto.",
         "footer_1": "Datos: NASA OB.DAAC (MODIS-Aqua) · NASA PO.DAAC (GHRSST MUR25) · descargas vía Earthdata",
         "footer_2": "Correlación ≠ causalidad · resultados estadísticos ≠ interpretación",
-        "footer_3": "Equipo Nasa-hackaton-UPQ · código MIT",
+        "footer_3": "Cardinals Hyperyon · código MIT",
         "computing": "Calculando tendencia…",
         "pct": "%",
         "per_decade": "/ década",
@@ -94,6 +95,7 @@ T = {
     },
     "en": {
         "brand_sub": "Trend Detective · NASA Space Apps",
+        "nav_story": "Story",
         "nav_region": "Region",
         "nav_analysis": "Analysis",
         "badge_real": "REAL DATA · NASA",
@@ -144,7 +146,7 @@ T = {
         "not_ready_body": "The server is downloading and cropping NASA products. This view completes itself when done; explore the globe meanwhile.",
         "footer_1": "Data: NASA OB.DAAC (MODIS-Aqua) · NASA PO.DAAC (GHRSST MUR25) · downloaded via Earthdata",
         "footer_2": "Correlation ≠ causation · statistical results ≠ interpretation",
-        "footer_3": "Nasa-hackaton-UPQ team · MIT code",
+        "footer_3": "Cardinals Hyperyon · MIT code",
         "computing": "Computing trend…",
         "pct": "%",
         "per_decade": "/ decade",
@@ -185,6 +187,7 @@ T = {
     },
     "pt": {
         "brand_sub": "Trend Detective · NASA Space Apps",
+        "nav_story": "História",
         "nav_region": "Região",
         "nav_analysis": "Análise",
         "badge_real": "DADOS REAIS · NASA",
@@ -235,7 +238,7 @@ T = {
         "not_ready_body": "O servidor está baixando e recortando os produtos da NASA. Esta visão se completa sozinha ao terminar; explore o globo enquanto isso.",
         "footer_1": "Dados: NASA OB.DAAC (MODIS-Aqua) · NASA PO.DAAC (GHRSST MUR25) · baixados via Earthdata",
         "footer_2": "Correlação ≠ causalidade · resultados estatísticos ≠ interpretação",
-        "footer_3": "Equipe Nasa-hackaton-UPQ · código MIT",
+        "footer_3": "Cardinals Hyperyon · código MIT",
         "computing": "Calculando tendência…",
         "pct": "%",
         "per_decade": "/ década",

@@ -68,12 +68,17 @@ mece = ["py.typed"]
 line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
+extend-exclude = ["Colab"]  # material original del equipo: se conserva tal cual
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "N"]
 # B008: Typer declara opciones en los argumentos por diseño
 # N812: alias cortos de módulos (data as D) · N818: nombres de excepciones en español
 ignore = ["B008", "N812", "N818"]
+
+[tool.ruff.lint.per-file-ignores]
+# La interfaz incrusta CSS/JS/HTML y textos largos en cadenas: no se parten
+"dashboard/*" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

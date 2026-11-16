@@ -223,3 +223,71 @@ products:
     notes: >
       Escorrentía MODELADA, no equivale a caudal medido. Valor mensual = media de
       acumulados de 3 h → ×8 × días del mes. Verificar antes de incorporar.
+
+  # ------------------------------------------- INVESTIGACIÓN (D19, config/research.yaml)
+  modis_sst_day_monthly:
+    variable: sst
+    role: research
+    level: final
+    daac: OB.DAAC
+    short_name: MODISA_L3m_SST
+    version: R2019.0
+    concept_id: C1615905770-OB_DAAC
+    doi: null
+    granule_pattern: "*.L3m.MO.SST.sst.4km.nc"
+    temporal_resolution: monthly
+    spatial_resolution: "4.64 km (1/24°)"
+    file_variable: sst
+    group: null
+    units_native: "degree_C"
+    units_target: "degC"
+    conversion: none
+    valid_range: [-2.0, 40.0]
+    lat_order: descending
+    quality_variable: qual_sst
+    max_quality_level: 1
+    notes: >
+      SST diurna 11 µm usada por el equipo. Validada contra MUR25 (2026-11-16):
+      Golfo +0.45 (MODIS) vs +0.42 °C/década (MUR25).
+
+  modis_flh_monthly:
+    variable: flh
+    role: research
+    level: final
+    daac: OB.DAAC
+    short_name: MODISA_L3m_FLH
+    version: "2022.0"
+    concept_id: C3380709159-OB_CLOUD
+    doi: null
+    granule_pattern: "*.L3m.MO.FLH.nflh.4km.nc"
+    temporal_resolution: monthly
+    spatial_resolution: "4.64 km (1/24°)"
+    file_variable: nflh
+    group: null
+    units_native: "W m^-2 um^-1 sr^-1"
+    units_target: "W m-2 um-1 sr-1"
+    conversion: none
+    valid_range: [-0.1, 5.0]
+    lat_order: descending
+    notes: Fluorescencia normalizada; validación independiente del algoritmo OCI.
+
+  viirs_chl_monthly:
+    variable: chlorophyll
+    role: research
+    level: final
+    daac: OB.DAAC
+    short_name: VIIRSN_L3m_CHL
+    version: "2022.0"
+    concept_id: C3388381565-OB_CLOUD
+    doi: null
+    granule_pattern: "*.L3m.MO.CHL.chlor_a.4km.nc"
+    temporal_resolution: monthly
+    spatial_resolution: "4.64 km (1/24°)"
+    file_variable: chlor_a
+    group: null
+    units_native: "mg m^-3"
+    units_target: "mg m-3"
+    conversion: none
+    valid_range: [0.001, 100.0]
+    lat_order: descending
+    notes: Segundo satélite (2012+) para detectar la deriva de MODIS-Aqua.

@@ -1,0 +1,70 @@
+# =============================================================================
+# Investigación del equipo Cardinals Hyperyon (D19/D20)
+# -----------------------------------------------------------------------------
+# Portado del notebook Colab/NASA_Datos (1).ipynb: mismas regiones, cuencas,
+# periodos y parámetros. Cambiar algo aquí cambia los resultados publicados:
+# registrarlo antes en docs/decisiones.md.
+# =============================================================================
+
+period: { start: "2003-01", end: "2025-12" }
+
+# Recortes (lat_min, lat_max, lon_min, lon_max)
+bbox_ocean: [18.0, 31.0, -98.0, -80.0]     # BBOX del notebook (PASO 1.1)
+bbox_basins: [14.0, 50.0, -115.0, -80.0]   # BBOX_PP del notebook (PASO 5.2)
+
+# Productos usados (claves de config/products.yaml)
+products:
+  chl: modis_chl_monthly          # MODIS-Aqua L3m CHL R2022.0 (se toma del almacén 'gom')
+  sst: modis_sst_day_monthly      # MODIS-Aqua L3m SST diurna R2019.0, qual_sst <= 1
+  flh: modis_flh_monthly          # fluorescencia nFLH (validación)
+  viirs: viirs_chl_monthly        # VIIRS-SNPP clorofila (validación, 2012+)
+  pp: imerg_final_monthly         # GPM IMERG Final V07 (hasta 2025-09)
+validation_sst: mur25_sst_daily   # SST independiente multisensor (validación añadida)
+
+coverage_min_pct: 25              # % mínimo de píxeles válidos por mes y región
+alpha: 0.05
+fdr_alpha: 0.05
+grid_factor: 6                    # 6 × 1/24° ≈ 0.25° para tendencias por celda
+grid_min_valid: 0.8               # fracción mínima de meses válidos por celda
+
+ancillary:
+  gom_polygon: "https://services1.arcgis.com/qr14biwnHA6Vis6l/arcgis/rest/services/GoM_Region_GSHHS/FeatureServer/2/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson"
+  mississippi_huc2: "https://hydro.nationalmap.gov/arcgis/rest/services/wbd/MapServer/1/query?where=huc2+IN+%28%2705%27%2C%2706%27%2C%2707%27%2C%2708%27%2C%2710%27%2C%2711%27%29&outFields=huc2%2Cname&returnGeometry=true&outSR=4326&maxAllowableOffset=0.02&geometryPrecision=3&f=geojson"
+  oni: "https://psl.noaa.gov/data/correlation/oni.data"
+
+# Regiones marinas: caja (lon_min, lon_max, lat_min, lat_max) ∩ polígono del Golfo (GCOOS)
+regions:
+  gulf:        { name_es: Golfo completo, name_en: Whole Gulf, name_pt: Golfo completo, box: null }
+  mississippi: { name_es: Pluma Mississippi-Atchafalaya, name_en: Mississippi-Atchafalaya plume, name_pt: Pluma Mississippi-Atchafalaya, box: [-93.5, -88.0, 28.0, 30.5] }
+  florida:     { name_es: Plataforma oeste de Florida, name_en: West Florida Shelf, name_pt: Plataforma oeste da Flórida, box: [-85.0, -81.0, 25.0, 30.0] }
+  tamaulipas:  { name_es: Plataforma Tamaulipas-Veracruz, name_en: Tamaulipas-Veracruz shelf, name_pt: Plataforma Tamaulipas-Veracruz, box: [-97.9, -96.0, 20.0, 26.0] }
+  bahia:       { name_es: Bahía de Campeche, name_en: Bay of Campeche, name_pt: Baía de Campeche, box: [-94.5, -90.5, 18.0, 20.0] }
+  banco:       { name_es: Banco de Campeche (Yucatán), name_en: Campeche Bank (Yucatán), name_pt: Banco de Campeche (Iucatã), box: [-91.5, -86.8, 20.5, 23.0] }
+  deep:        { name_es: Golfo profundo (oceánico), name_en: Deep Gulf (oceanic), name_pt: Golfo profundo (oceânico), box: [-94.0, -86.0, 23.0, 27.0] }
+
+# Cuencas terrestres: 'huc2' = polígono USGS (Mississippi); el resto, cajas (lon_min, lat_min, lon_max, lat_max)
+basins:
+  mississippi: { name_es: Cuenca Mississippi-Atchafalaya, name_en: Mississippi-Atchafalaya basin, name_pt: Bacia Mississippi-Atchafalaya, shape: huc2 }
+  florida:     { name_es: Vertiente Florida (Golfo), name_en: Florida Gulf slope, name_pt: Vertente da Flórida (Golfo), shape: [-87.5, 27.0, -82.0, 34.0] }
+  tamaulipas:  { name_es: Vertiente Tamaulipas-Veracruz, name_en: Tamaulipas-Veracruz slope, name_pt: Vertente Tamaulipas-Veracruz, shape: [-101.0, 19.5, -97.3, 26.0] }
+  grijalva:    { name_es: Cuenca Grijalva-Usumacinta, name_en: Grijalva-Usumacinta basin, name_pt: Bacia Grijalva-Usumacinta, shape: [-94.3, 15.8, -89.5, 18.7] }
+  yucatan:     { name_es: Península de Yucatán, name_en: Yucatán Peninsula, name_pt: Península de Iucatã, shape: [-90.5, 18.0, -86.7, 21.7] }
+
+# Pares cuenca → región marina (el último es el CONTROL negativo)
+pairs:
+  - [mississippi, mississippi]
+  - [florida, florida]
+  - [tamaulipas, tamaulipas]
+  - [grijalva, bahia]
+  - [yucatan, banco]
+  - [mississippi, deep]
+
+# Modelos de regresión múltiple: región → [cuenca, desfase de lluvia en meses] (null = sin cuenca)
+models:
+  mississippi: [mississippi, 2]
+  florida: [florida, 3]
+  tamaulipas: [tamaulipas, 1]
+  bahia: [grijalva, 1]
+  banco: [yucatan, 0]
+  deep: [null, null]
+  gulf: [null, null]

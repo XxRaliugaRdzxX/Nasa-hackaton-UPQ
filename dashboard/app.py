@@ -18,6 +18,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))  # módulos locales del
 
 from components import globe, kpis, mission_bar, region_cards  # noqa: E402
 from i18n import T  # noqa: E402
+from story import build_story_data, json_safe, story  # noqa: E402
+from story_text import S as STORY_TEXT  # noqa: E402
 from theme import CSS  # noqa: E402
 
 from mece.acquisition.data import DataUnavailable, RegionNotPrepared, fetch_dataset, read_status  # noqa: E402
@@ -207,6 +209,28 @@ def coast_for(bbox: tuple):
     return coast_lines(tuple(bbox), str(land))
 
 
+@st.cache_data(show_spinner=False, ttl=600)
+def research_results(stamp: float):
+    """Resultados de mece.research (se recargan cuando cambia el archivo)."""
+    d = DATA / "research" / "results"
+    if not (d / "results.json").exists():
+        return None, None
+    res = json.loads((d / "results.json").read_text())
+    geo = json.loads((d / "regions.geojson").read_text()) if (d / "regions.geojson").exists() else None
+    return res, geo
+
+
+def results_stamp() -> float:
+    f = DATA / "research" / "results" / "results.json"
+    return f.stat().st_mtime if f.exists() else 0.0
+
+
+def cb_story_nav() -> None:
+    v = _event("story", "nav")
+    if v in ("region", "analysis"):
+        ss.view = v
+
+
 def fmt_p(p: float) -> str:
     if not np.isfinite(p):
         return "—"
@@ -281,9 +305,10 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
     with st.container(key="nav"):
-        for v, icon in (("region", ":material/public:"), ("analysis", ":material/insights:")):
+        for v, icon in (("story", ":material/auto_stories:"), ("region", ":material/public:"),
+                        ("analysis", ":material/insights:")):
             st.button(
-                t("nav_region") if v == "region" else t("nav_analysis"),
+                t(f"nav_{v}"),
                 key=f"nav_{v}", icon=icon, width="stretch",
                 type="primary" if ss.view == v else "secondary",
                 on_click=set_view(v),
@@ -369,8 +394,18 @@ def status_cards() -> str:
     return f'<div class="status">{"".join(cards)}</div>'
 
 
+# ============================================================== VISTA HISTORIA
+if ss.view == "story":
+    res, geo = research_results(results_stamp())
+    hero = globe_assets()["tex"].get("chl") or globe_assets()["tex"].get("sst", "")
+    story(
+        json_safe(build_story_data(res, geo, lang, STORY_TEXT[lang],
+                                   str(DATA / "raw" / "ancillary" / "natural_earth" / "ne_10m_land.zip"), hero)),
+        on_nav=cb_story_nav,
+    )
+
 # =============================================================== VISTA REGIÓN
-if ss.view == "region":
+elif ss.view == "region":
     left, right = st.columns([0.34, 0.66], gap="large")
     with left, st.container(border=True):
         st.markdown(
@@ -444,208 +479,252 @@ if ss.view == "region":
 
 # ============================================================== VISTA ANÁLISIS
 else:
-    y_min, y_max = int(reg.t0[:4]), int(reg.t1[:4])
-    ss.setdefault("y0", y_min)
-    ss.setdefault("y1", y_max)
-    if not (y_min <= ss.y0 <= y_max):
-        ss.y0 = y_min
-    if not (y_min <= ss.y1 <= y_max):
-        ss.y1 = y_max
-    st.markdown(
-        f'<p class="eyebrow">{t("eyebrow_case")}</p><div class="case-title">{reg.name(lang)}</div>'
-        f'<div class="case-region">{reg.loc("region", lang)} · {bbox_txt(reg.bbox)}</div>',
-        unsafe_allow_html=True,
-    )
-    with st.container(border=True):
-        st.markdown('<span class="card-marker"></span>', unsafe_allow_html=True)
-        c = st.columns([0.22, 0.2, 0.11, 0.11, 0.16, 0.2], vertical_alignment="bottom")
-        with c[0]:
-            wk = persist("case")
-            st.selectbox(
-                t("choose_region"),
-                list(REGIONS),
-                key=wk,
-                on_change=on(wk),
-                format_func=lambda k: REGIONS[k].name(lang),
-            )
-        with c[1]:
-            if ss.ds not in reg.datasets:
-                ss.ds = reg.datasets[0]
-            wk = persist("ds")
-            st.selectbox(
-                t("variable"), list(reg.datasets), key=wk, on_change=on(wk), format_func=ds_label
-            )
-        years = list(range(y_min, y_max + 1))
-        with c[2]:
-            wk = persist("y0")
-            st.selectbox(t("from"), years, key=wk, on_change=on(wk))
-        with c[3]:
-            wk = persist("y1")
-            st.selectbox(t("to"), years, key=wk, on_change=on(wk))
-        with c[4]:
-            wk = persist("season")
-            st.selectbox(
-                t("season"),
-                ["all", "wet", "dry"],
-                key=wk,
-                on_change=on(wk),
-                format_func=lambda s: t(f"season_{s}"),
-            )
-        with c[5]:
-            st.markdown(f'<div class="run-note">{t("run_note")}</div>', unsafe_allow_html=True)
-    reg = REGIONS[ss.case]
-    if ss.y0 > ss.y1:
-        ss.y1 = ss.y0
-    ds_id = ss.ds if ss.ds in reg.datasets else reg.datasets[0]
-    spec = CATALOG[ds_id]
-    t0, t1 = f"{ss.y0}-01", f"{ss.y1}-12"
-    is_log = spec.log_transform
-    try:
-        with st.spinner(t("computing")):
-            series, trd, meta = analysis_series(ds_id, reg.bbox, t0, t1, ss.season)
-            tmap, reduced = analysis_map(ds_id, reg.bbox, t0, t1, ss.season)
-    except (DataUnavailable, RegionNotPrepared, FileNotFoundError):
+    import research_view as RV
+    from research_text import R as RTX
+
+    def render_tool() -> None:
+        """Explorador interactivo original (contrato D14)."""
+        global reg
+        y_min, y_max = int(reg.t0[:4]), int(reg.t1[:4])
+        ss.setdefault("y0", y_min)
+        ss.setdefault("y1", y_max)
+        if not (y_min <= ss.y0 <= y_max):
+            ss.y0 = y_min
+        if not (y_min <= ss.y1 <= y_max):
+            ss.y1 = y_max
         st.markdown(
-            f'<div class="notready"><h3>{t("not_ready_title")}</h3><p>{t("not_ready_body")}</p></div>'
-            + status_cards(),
+            f'<p class="eyebrow">{t("eyebrow_case")}</p><div class="case-title">{reg.name(lang)}</div>'
+            f'<div class="case-region">{reg.loc("region", lang)} · {bbox_txt(reg.bbox)}</div>',
             unsafe_allow_html=True,
         )
-        st.stop()
+        with st.container(border=True):
+            st.markdown('<span class="card-marker"></span>', unsafe_allow_html=True)
+            c = st.columns([0.22, 0.2, 0.11, 0.11, 0.16, 0.2], vertical_alignment="bottom")
+            with c[0]:
+                wk = persist("case")
+                st.selectbox(
+                    t("choose_region"),
+                    list(REGIONS),
+                    key=wk,
+                    on_change=on(wk),
+                    format_func=lambda k: REGIONS[k].name(lang),
+                )
+            with c[1]:
+                if ss.ds not in reg.datasets:
+                    ss.ds = reg.datasets[0]
+                wk = persist("ds")
+                st.selectbox(
+                    t("variable"), list(reg.datasets), key=wk, on_change=on(wk), format_func=ds_label
+                )
+            years = list(range(y_min, y_max + 1))
+            with c[2]:
+                wk = persist("y0")
+                st.selectbox(t("from"), years, key=wk, on_change=on(wk))
+            with c[3]:
+                wk = persist("y1")
+                st.selectbox(t("to"), years, key=wk, on_change=on(wk))
+            with c[4]:
+                wk = persist("season")
+                st.selectbox(
+                    t("season"),
+                    ["all", "wet", "dry"],
+                    key=wk,
+                    on_change=on(wk),
+                    format_func=lambda s: t(f"season_{s}"),
+                )
+            with c[5]:
+                st.markdown(f'<div class="run-note">{t("run_note")}</div>', unsafe_allow_html=True)
+        reg = REGIONS[ss.case]
+        if ss.y0 > ss.y1:
+            ss.y1 = ss.y0
+        ds_id = ss.ds if ss.ds in reg.datasets else reg.datasets[0]
+        spec = CATALOG[ds_id]
+        t0, t1 = f"{ss.y0}-01", f"{ss.y1}-12"
+        is_log = spec.log_transform
+        try:
+            with st.spinner(t("computing")):
+                series, trd, meta = analysis_series(ds_id, reg.bbox, t0, t1, ss.season)
+                tmap, reduced = analysis_map(ds_id, reg.bbox, t0, t1, ss.season)
+        except (DataUnavailable, RegionNotPrepared, FileNotFoundError):
+            st.markdown(
+                f'<div class="notready"><h3>{t("not_ready_title")}</h3><p>{t("not_ready_body")}</p></div>'
+                + status_cards(),
+                unsafe_allow_html=True,
+            )
+            return
 
-    tr = TrendResult(**trd)
-    years_span = ss.y1 - ss.y0 + 1
-    if is_log:
-        kpi1, u1 = percent_per_decade(tr.slope_per_decade), "%"
-        kpi2 = (10 ** (tr.slope_per_decade * years_span / 10) - 1) * 100
-        u2 = f"{ss.y0}–{ss.y1}"
-        ci = (percent_per_decade(tr.ci_low), percent_per_decade(tr.ci_high))
-        series_units, transform = "%", (lambda v: (np.power(10.0, v) - 1) * 100)
+        tr = TrendResult(**trd)
+        years_span = ss.y1 - ss.y0 + 1
+        if is_log:
+            kpi1, u1 = percent_per_decade(tr.slope_per_decade), "%"
+            kpi2 = (10 ** (tr.slope_per_decade * years_span / 10) - 1) * 100
+            u2 = f"{ss.y0}–{ss.y1}"
+            ci = (percent_per_decade(tr.ci_low), percent_per_decade(tr.ci_high))
+            series_units, transform = "%", (lambda v: (np.power(10.0, v) - 1) * 100)
+        else:
+            kpi1, u1 = tr.slope_per_decade, spec.units
+            clim = meta.get("clim_mean") or np.nan
+            kpi2 = 100 * tr.slope_per_decade / clim if clim else np.nan
+            u2 = f"{t('per_decade')} · {t('clim')} {clim:.1f} {spec.units}"
+            ci = (tr.ci_low, tr.ci_high)
+            series_units, transform = spec.units, None
+        warm, cool = ("#fb7185", "#fbbf24"), ("#38bdf8", "#818cf8")
+        tone = warm if (np.isfinite(kpi1) and kpi1 >= 0) else cool
+        sig_tone = ("#34d399", "#22d3ee") if tr.significant else ("#94a3b8", "#64748b")
+        sig_txt = t("significant") if tr.significant else t("not_significant")
+        if not tr.robust:
+            sig_txt += f" · {t('sensitive')}"
+        season_lbl = "" if ss.season == "all" else f" · {t('season_' + ss.season)}"
+        kpis(
+            [
+                {
+                    "label": t("kpi_sen"),
+                    "value": float(kpi1),
+                    "dec": 3 if abs(kpi1) < 1 else 2,
+                    "sign": True,
+                    "unit": f"{u1} {t('per_decade')}",
+                    "c1": tone[0],
+                    "c2": tone[1],
+                    "sub": f"{t('ci')} [{ci[0]:+.2f}, {ci[1]:+.2f}]",
+                },
+                {
+                    "label": t("kpi_rel"),
+                    "value": float(kpi2),
+                    "dec": 1,
+                    "sign": True,
+                    "unit": "%",
+                    "c1": tone[1],
+                    "c2": tone[0],
+                    "sub": u2,
+                },
+                {
+                    "label": t("kpi_p"),
+                    "text": fmt_p(tr.p),
+                    "value": None,
+                    "unit": "p",
+                    "dot": True,
+                    "c1": sig_tone[0],
+                    "c2": sig_tone[1],
+                    "sub": f"{sig_txt} · z = {tr.z:.2f}",
+                    "z": float(tr.z),
+                },
+                {
+                    "label": t("kpi_n"),
+                    "value": float(tr.n),
+                    "dec": 0,
+                    "unit": t("months"),
+                    "c1": "#a78bfa",
+                    "c2": "#ec4899",
+                    "sub": f"{ss.y0}–{ss.y1}{season_lbl}",
+                },
+            ],
+            key=f"kpis_{ds_id}_{ss.case}_{ss.y0}_{ss.y1}_{ss.season}",
+        )
+
+        tmap_disp = tmap.copy()
+        map_units = spec.loc("trend_units", lang)
+        if is_log:
+            tmap_disp["slope"] = (np.power(10.0, tmap["slope"]) - 1) * 100
+        src = spec.loc("source", lang)
+        m1, m2 = st.columns([0.47, 0.53], gap="medium")
+        with m1, st.container(border=True):
+            st.markdown(
+                f'<span class="card-marker"></span><div class="chart-h">{t("map_title")}</div>'
+                f'<div class="chart-sub">{t("map_sub")}</div>',
+                unsafe_allow_html=True,
+            )
+            st.plotly_chart(
+                fig_trend_map(
+                    tmap_disp, map_units, coast=coast_for(reg.bbox), marker=reg.marker, height=430
+                ),
+                config=PLOT_CFG,
+                width="stretch",
+                key="map",
+            )
+            extra = f" · {t('map_reduced')}" if reduced else ""
+            st.markdown(
+                f'<div class="chart-src">{t("source")}: {src} · {tmap.attrs.get("period", "")} · '
+                f"{tmap.attrs.get('n_pixels_significant', 0)}/{tmap.attrs.get('n_pixels_tested', 0)} px{extra}</div>",
+                unsafe_allow_html=True,
+            )
+        with m2, st.container(border=True):
+            st.markdown(
+                f'<span class="card-marker"></span><div class="chart-h">{t("ts_title")}</div>'
+                f'<div class="chart-sub">{t("ts_sub")}</div>',
+                unsafe_allow_html=True,
+            )
+            st.plotly_chart(
+                fig_series(
+                    series,
+                    tr,
+                    series_units,
+                    labels=(t("anom"), t("sen")),
+                    transform=transform,
+                    height=430,
+                ),
+                config=PLOT_CFG,
+                width="stretch",
+                key="ts",
+            )
+            st.markdown(
+                f'<div class="chart-src">{t("source")}: {src} · {tr.method} · '
+                f"{t('clim')}: {meta.get('clim_period', '')}</div>",
+                unsafe_allow_html=True,
+            )
+        with st.container(border=True):
+            st.markdown(
+                f'<span class="card-marker"></span><div class="chart-h">{t("stripes_title")}</div>'
+                f'<div class="chart-sub">{t("stripes_sub")}</div>',
+                unsafe_allow_html=True,
+            )
+            st.plotly_chart(
+                fig_stripes(series, series_units, transform=transform),
+                config=PLOT_CFG,
+                width="stretch",
+                key="stripes",
+            )
+        st.markdown(
+            f'<div class="limit">{spec.loc("limitation", lang)}</div>',
+            unsafe_allow_html=True,
+        )
+
+
+    X = RTX[lang]
+    st.markdown(RV.CSS, unsafe_allow_html=True)
+    res, _geo = research_results(results_stamp())
+    rdir = DATA / 'research' / 'results'
+    labels = [X[k] for k in ('tab_find', 'tab_trend', 'tab_maps', 'tab_series', 'tab_rivers', 'tab_ext',
+                             'tab_val', 'tab_gal', 'tab_tool')]
+    tabs = st.tabs(labels)
+    if res is None:
+        for tb in tabs[:-1]:
+            with tb:
+                st.markdown(f'<div class="notready"><p>{X["not_ready"]}</p></div>', unsafe_allow_html=True)
     else:
-        kpi1, u1 = tr.slope_per_decade, spec.units
-        clim = meta.get("clim_mean") or np.nan
-        kpi2 = 100 * tr.slope_per_decade / clim if clim else np.nan
-        u2 = f"{t('per_decade')} · {t('clim')} {clim:.1f} {spec.units}"
-        ci = (tr.ci_low, tr.ci_high)
-        series_units, transform = spec.units, None
-    warm, cool = ("#fb7185", "#fbbf24"), ("#38bdf8", "#818cf8")
-    tone = warm if (np.isfinite(kpi1) and kpi1 >= 0) else cool
-    sig_tone = ("#34d399", "#22d3ee") if tr.significant else ("#94a3b8", "#64748b")
-    sig_txt = t("significant") if tr.significant else t("not_significant")
-    if not tr.robust:
-        sig_txt += f" · {t('sensitive')}"
-    season_lbl = "" if ss.season == "all" else f" · {t('season_' + ss.season)}"
-    kpis(
-        [
-            {
-                "label": t("kpi_sen"),
-                "value": float(kpi1),
-                "dec": 3 if abs(kpi1) < 1 else 2,
-                "sign": True,
-                "unit": f"{u1} {t('per_decade')}",
-                "c1": tone[0],
-                "c2": tone[1],
-                "sub": f"{t('ci')} [{ci[0]:+.2f}, {ci[1]:+.2f}]",
-            },
-            {
-                "label": t("kpi_rel"),
-                "value": float(kpi2),
-                "dec": 1,
-                "sign": True,
-                "unit": "%",
-                "c1": tone[1],
-                "c2": tone[0],
-                "sub": u2,
-            },
-            {
-                "label": t("kpi_p"),
-                "text": fmt_p(tr.p),
-                "value": None,
-                "unit": "p",
-                "dot": True,
-                "c1": sig_tone[0],
-                "c2": sig_tone[1],
-                "sub": f"{sig_txt} · z = {tr.z:.2f}",
-                "z": float(tr.z),
-            },
-            {
-                "label": t("kpi_n"),
-                "value": float(tr.n),
-                "dec": 0,
-                "unit": t("months"),
-                "c1": "#a78bfa",
-                "c2": "#ec4899",
-                "sub": f"{ss.y0}–{ss.y1}{season_lbl}",
-            },
-        ],
-        key=f"kpis_{ds_id}_{ss.case}_{ss.y0}_{ss.y1}_{ss.season}",
-    )
-
-    tmap_disp = tmap.copy()
-    map_units = spec.loc("trend_units", lang)
-    if is_log:
-        tmap_disp["slope"] = (np.power(10.0, tmap["slope"]) - 1) * 100
-    src = spec.loc("source", lang)
-    m1, m2 = st.columns([0.47, 0.53], gap="medium")
-    with m1, st.container(border=True):
-        st.markdown(
-            f'<span class="card-marker"></span><div class="chart-h">{t("map_title")}</div>'
-            f'<div class="chart-sub">{t("map_sub")}</div>',
-            unsafe_allow_html=True,
-        )
-        st.plotly_chart(
-            fig_trend_map(
-                tmap_disp, map_units, coast=coast_for(reg.bbox), marker=reg.marker, height=430
-            ),
-            config=PLOT_CFG,
-            width="stretch",
-            key="map",
-        )
-        extra = f" · {t('map_reduced')}" if reduced else ""
-        st.markdown(
-            f'<div class="chart-src">{t("source")}: {src} · {tmap.attrs.get("period", "")} · '
-            f"{tmap.attrs.get('n_pixels_significant', 0)}/{tmap.attrs.get('n_pixels_tested', 0)} px{extra}</div>",
-            unsafe_allow_html=True,
-        )
-    with m2, st.container(border=True):
-        st.markdown(
-            f'<span class="card-marker"></span><div class="chart-h">{t("ts_title")}</div>'
-            f'<div class="chart-sub">{t("ts_sub")}</div>',
-            unsafe_allow_html=True,
-        )
-        st.plotly_chart(
-            fig_series(
-                series,
-                tr,
-                series_units,
-                labels=(t("anom"), t("sen")),
-                transform=transform,
-                height=430,
-            ),
-            config=PLOT_CFG,
-            width="stretch",
-            key="ts",
-        )
-        st.markdown(
-            f'<div class="chart-src">{t("source")}: {src} · {tr.method} · '
-            f"{t('clim')}: {meta.get('clim_period', '')}</div>",
-            unsafe_allow_html=True,
-        )
-    with st.container(border=True):
-        st.markdown(
-            f'<span class="card-marker"></span><div class="chart-h">{t("stripes_title")}</div>'
-            f'<div class="chart-sub">{t("stripes_sub")}</div>',
-            unsafe_allow_html=True,
-        )
-        st.plotly_chart(
-            fig_stripes(series, series_units, transform=transform),
-            config=PLOT_CFG,
-            width="stretch",
-            key="stripes",
-        )
-    st.markdown(
-        f'<div class="limit">{spec.loc("limitation", lang)}</div>',
-        unsafe_allow_html=True,
-    )
+        rseries = RV.load_series(rdir)
+        land_zip = str(DATA / 'raw' / 'ancillary' / 'natural_earth' / 'ne_10m_land.zip')
+        with tabs[0]:
+            st.markdown(f'<p class="case-text" style="margin-top:10px">{X["intro"]} '
+                        f'<span class="mono" style="color:#64748b">· {X["generated"]}: {res["meta"]["generated"]}</span></p>',
+                        unsafe_allow_html=True)
+            RV.findings(res, lang, X, kpis)
+        with tabs[1]:
+            RV.trends(res, lang, X)
+        with tabs[2]:
+            RV.maps(rdir, lang, X, land_zip)
+        with tabs[3]:
+            if rseries is not None:
+                RV.series(rseries, res, lang, X)
+        with tabs[4]:
+            RV.rivers(res, lang, X)
+        with tabs[5]:
+            RV.extremes(res, lang, X)
+        with tabs[6]:
+            RV.validation(res, lang, X)
+        with tabs[7]:
+            RV.gallery(X, rdir, rseries)
+    with tabs[-1]:
+        render_tool()
 
 st.markdown(
     f'<div class="mece-footer"><span>{t("footer_1")}</span><span>{t("footer_2")}</span>'

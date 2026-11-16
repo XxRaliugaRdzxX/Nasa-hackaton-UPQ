@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 # Raíz del repositorio: src/mece/config.py → parents[2]. En Docker se fija con MECE_ROOT.
 ROOT = Path(os.environ.get("MECE_ROOT", Path(__file__).resolve().parents[2]))
 
-Variable = Literal["chlorophyll", "sst", "precipitation", "runoff"]
+Variable = Literal["chlorophyll", "sst", "precipitation", "runoff", "flh"]
 Conversion = Literal[
     "none",
     "kelvin_to_celsius",
@@ -55,7 +55,7 @@ class BBox(BaseModel):
 
 class Product(BaseModel):
     variable: Variable
-    role: Literal["historical", "nrt", "validation", "ancillary"]
+    role: Literal["historical", "nrt", "validation", "ancillary", "research"]
     level: Literal["final", "nrt"]
     daac: str
     short_name: str

@@ -1,0 +1,253 @@
+"""Textos de la vista Historia (storytelling) en español, inglés y portugués.
+
+Narrativa basada en la investigación y la presentación del equipo Cardinals Hyperyon.
+Las cifras NO van aquí: se inyectan desde mece.research (results.json) para que el
+relato siempre coincida con los resultados reproducidos (D18/D19).
+"""
+
+S = {
+    "es": {
+        "hero_kicker": "Golfo de México · 2003–2025 · 23 años vistos desde el espacio",
+        "hero_title": "El mar que está cambiando de color y de temperatura",
+        "hero_lead": "Satélites de la NASA han observado el Golfo de México cada mes durante 23 años. "
+                     "Juntamos esas miradas para responder cuatro preguntas: qué cambia, dónde, cuánto "
+                     "y si de verdad es un cambio.",
+        "hero_scroll": "Desliza para comenzar",
+        "c1_k": "Capítulo 1",
+        "c1_t": "Un mar que respira",
+        "c1_p": "El color del océano revela vida. La clorofila delata al fitoplancton: algas microscópicas que "
+                "producen buena parte del oxígeno del planeta y alimentan toda la cadena marina, del camarón al "
+                "atún. Su temperatura, el agua que traen los ríos y la luz que reflejan se pueden medir desde órbita.",
+        "c1_hint": "Toca cada satélite",
+        "sats": [
+            {"y": "2002", "n": "Aqua · MODIS", "d": "Mide el color del océano y su temperatura. Nuestro registro principal desde 2003."},
+            {"y": "2011", "n": "Suomi-NPP · VIIRS", "d": "Un segundo par de ojos sobre el color del mar. Clave para descubrir el giro de esta historia."},
+            {"y": "2014", "n": "GPM · IMERG", "d": "Mide la lluvia en todo el planeta: así sabemos cuánta agua llega a los ríos."},
+            {"y": "2024", "n": "PACE · OCI", "d": "La nueva generación de color oceánico: la continuidad para las próximas décadas."},
+        ],
+        "c2_k": "Capítulo 2",
+        "c2_t": "Todo el Golfo se está calentando",
+        "c2_p": "Cada franja es un año. Azul, más frío que lo normal; rojo, más cálido. Pulsa reproducir y mira "
+                "cómo cambia el Golfo de 2003 a hoy. Ocurre en las siete regiones estudiadas, sin excepción.",
+        "c2_play": "Reproducir",
+        "c2_jump": "Hacia 2015 hubo un salto: el Golfo subió de nivel y no ha regresado.",
+        "c2_grid_t": "¿Cuántos meses son extremadamente cálidos?",
+        "c2_grid_before": "2003–2012",
+        "c2_grid_after": "2016–2025",
+        "c2_grid_cap": "De cada 10 meses",
+        "c3_k": "Capítulo 3",
+        "c3_t": "El promedio esconde la historia",
+        "c3_p": "Si miras el Golfo completo como un solo número, parece que la vida del mar no cambia. "
+                "Región por región la historia es otra. Toca cada zona del mapa.",
+        "c3_temp": "Temperatura",
+        "c3_chl": "Vida marina (clorofila)",
+        "up": "sube", "down": "baja", "flat": "sin cambio claro",
+        "c4_k": "Capítulo 4",
+        "c4_t": "Los ríos alimentan la costa",
+        "c4_p": "El Grijalva y el Usumacinta, el segundo sistema de ríos más caudaloso de México, desembocan en la "
+                "Bahía de Campeche. Cuando llueve en su cuenca, el mar se enverdece poco después. Mueve el "
+                "control para ver cuánto tarda.",
+        "c4_slider": "Meses después de la lluvia",
+        "c4_strong": "conexión fuerte", "c4_weak": "conexión débil",
+        "c4_warn": "Pero la lluvia en esta cuenca está disminuyendo: menos agua dulce y menos nutrientes para la costa.",
+        "c5_k": "Capítulo 5 · El giro",
+        "c5_t": "El satélite que se iba desviando",
+        "c5_p": "Con un solo satélite, las costas parecían reverdecer. Pero un buen detective busca un segundo "
+                "testigo: VIIRS. Al compararlos descubrimos que MODIS, envejeciendo en su órbita, veía el mar "
+                "cada vez un poco más verde de lo que era.",
+        "c5_one": "Con un satélite",
+        "c5_two": "Con dos satélites",
+        "c5_one_msg": "Conclusión aparente: algunas costas ganan vida y el Golfo no cambia.",
+        "c5_two_msg": "Conclusión corregida: el Golfo pierde clorofila, sobre todo en el Banco de Campeche y en mar abierto.",
+        "c5_lesson": "Verificar con un segundo instrumento cambió la respuesta. Por eso cada resultado de esta herramienta se pone a prueba.",
+        "c6_k": "Capítulo 6",
+        "c6_t": "Por qué importa",
+        "c6_hint": "Toca cada tarjeta",
+        "cards": [
+            {"t": "Pesquerías", "f": "El Banco de Campeche es hogar del pulpo maya y del mero.",
+             "b": "Es de las zonas que más se calientan y donde más clorofila se pierde: menos alimento en la base de la red."},
+            {"t": "Arrecifes", "f": "Alacranes y el Sistema Arrecifal Veracruzano.",
+             "b": "Un grado más de temperatura eleva el riesgo de blanqueamiento de los corales."},
+            {"t": "Huracanes", "f": "El agua caliente es su combustible.",
+             "b": "Un Golfo más cálido puede favorecer intensificaciones rápidas frente a Tamaulipas, Veracruz, Tabasco y Yucatán."},
+            {"t": "Ríos y comunidades", "f": "La cuenca Grijalva–Usumacinta.",
+             "b": "Llueve menos en ella, y esa lluvia llega al mar un mes después: agua, sedimentos y nutrientes para la costa."},
+        ],
+        "c7_k": "Capítulo 7",
+        "c7_t": "Lo que todavía no sabemos",
+        "c7_p": "La temperatura ya dio una señal clara. La vida del mar es más ruidosa: para confirmar una tendencia "
+                "de clorofila hacen falta décadas de observación continua. Seguir midiendo con nuevos satélites, como "
+                "PACE, es la única manera de saberlo.",
+        "c7_have": "años observados",
+        "c7_need_sst": "Temperatura: años necesarios para estar seguros",
+        "c7_need_chl": "Clorofila: años necesarios para estar seguros",
+        "end_t": "Ahora explóralo tú",
+        "end_p": "Elige una región en el globo o revisa cada prueba estadística en el análisis completo.",
+        "end_region": "Explorar el globo",
+        "end_analysis": "Ver el análisis",
+        "team": "Una investigación de Cardinals Hyperyon · NASA Space Apps Challenge 2026",
+        "sources": "Datos: NASA OB.DAAC (MODIS-Aqua, VIIRS), NASA GES DISC (GPM IMERG), NASA PO.DAAC (MUR25), NOAA (ONI).",
+        "preparing": "La historia se está preparando: el servidor está reproduciendo la investigación con los datos de la NASA.",
+    },
+    "en": {
+        "hero_kicker": "Gulf of Mexico · 2003–2025 · 23 years seen from space",
+        "hero_title": "A sea that is changing its color and its temperature",
+        "hero_lead": "NASA satellites have watched the Gulf of Mexico every month for 23 years. We combined those "
+                     "views to answer four questions: what is changing, where, how much, and whether it is a real change.",
+        "hero_scroll": "Scroll to begin",
+        "c1_k": "Chapter 1",
+        "c1_t": "A sea that breathes",
+        "c1_p": "Ocean color reveals life. Chlorophyll betrays phytoplankton: microscopic algae that produce much of "
+                "the planet's oxygen and feed the whole marine food web, from shrimp to tuna. Their temperature, the "
+                "water rivers bring and the light they reflect can all be measured from orbit.",
+        "c1_hint": "Tap each satellite",
+        "sats": [
+            {"y": "2002", "n": "Aqua · MODIS", "d": "Measures ocean color and temperature. Our main record since 2003."},
+            {"y": "2011", "n": "Suomi-NPP · VIIRS", "d": "A second pair of eyes on ocean color. Key to discovering this story's twist."},
+            {"y": "2014", "n": "GPM · IMERG", "d": "Measures rain across the planet: how much water reaches the rivers."},
+            {"y": "2024", "n": "PACE · OCI", "d": "The new generation of ocean color: continuity for the coming decades."},
+        ],
+        "c2_k": "Chapter 2",
+        "c2_t": "The whole Gulf is warming",
+        "c2_p": "Each stripe is a year. Blue, colder than normal; red, warmer. Press play and watch the Gulf change "
+                "from 2003 to today. It happens in all seven regions studied, without exception.",
+        "c2_play": "Play",
+        "c2_jump": "Around 2015 there was a jump: the Gulf moved to a warmer level and has not come back.",
+        "c2_grid_t": "How many months are extremely hot?",
+        "c2_grid_before": "2003–2012",
+        "c2_grid_after": "2016–2025",
+        "c2_grid_cap": "Out of every 10 months",
+        "c3_k": "Chapter 3",
+        "c3_t": "The average hides the story",
+        "c3_p": "Seen as a single number, the Gulf's marine life seems unchanged. Region by region, the story is "
+                "different. Tap each area of the map.",
+        "c3_temp": "Temperature",
+        "c3_chl": "Marine life (chlorophyll)",
+        "up": "rising", "down": "falling", "flat": "no clear change",
+        "c4_k": "Chapter 4",
+        "c4_t": "Rivers feed the coast",
+        "c4_p": "The Grijalva and Usumacinta, Mexico's second-largest river system, flow into the Bay of Campeche. "
+                "When it rains in their basin, the sea turns greener shortly after. Move the slider to see how long it takes.",
+        "c4_slider": "Months after the rain",
+        "c4_strong": "strong link", "c4_weak": "weak link",
+        "c4_warn": "But rain in this basin is decreasing: less fresh water and fewer nutrients for the coast.",
+        "c5_k": "Chapter 5 · The twist",
+        "c5_t": "The satellite that was drifting",
+        "c5_p": "With one satellite, the coasts seemed to be getting greener. But a good detective looks for a second "
+                "witness: VIIRS. Comparing them revealed that MODIS, aging in its orbit, saw the sea a little greener "
+                "every year than it really was.",
+        "c5_one": "One satellite",
+        "c5_two": "Two satellites",
+        "c5_one_msg": "Apparent conclusion: some coasts gain life and the Gulf does not change.",
+        "c5_two_msg": "Corrected conclusion: the Gulf is losing chlorophyll, especially on the Campeche Bank and in the open sea.",
+        "c5_lesson": "Checking with a second instrument changed the answer. That is why every result in this tool is put to the test.",
+        "c6_k": "Chapter 6",
+        "c6_t": "Why it matters",
+        "c6_hint": "Tap each card",
+        "cards": [
+            {"t": "Fisheries", "f": "The Campeche Bank is home to the Mayan octopus and grouper.",
+             "b": "It is among the fastest-warming areas and loses the most chlorophyll: less food at the base of the web."},
+            {"t": "Coral reefs", "f": "Alacranes Reef and the Veracruz Reef System.",
+             "b": "One more degree raises the risk of coral bleaching."},
+            {"t": "Hurricanes", "f": "Warm water is their fuel.",
+             "b": "A warmer Gulf can favor rapid intensification off Tamaulipas, Veracruz, Tabasco and Yucatán."},
+            {"t": "Rivers and communities", "f": "The Grijalva–Usumacinta basin.",
+             "b": "It rains less there, and that rain reaches the sea a month later: water, sediment and nutrients for the coast."},
+        ],
+        "c7_k": "Chapter 7",
+        "c7_t": "What we still don't know",
+        "c7_p": "Temperature has already sent a clear signal. Marine life is noisier: confirming a chlorophyll trend "
+                "takes decades of continuous observation. Keeping on measuring with new satellites, like PACE, is the only way to know.",
+        "c7_have": "years observed",
+        "c7_need_sst": "Temperature: years needed to be sure",
+        "c7_need_chl": "Chlorophyll: years needed to be sure",
+        "end_t": "Now explore it yourself",
+        "end_p": "Pick a region on the globe or review every statistical test in the full analysis.",
+        "end_region": "Explore the globe",
+        "end_analysis": "See the analysis",
+        "team": "A Cardinals Hyperyon investigation · NASA Space Apps Challenge 2026",
+        "sources": "Data: NASA OB.DAAC (MODIS-Aqua, VIIRS), NASA GES DISC (GPM IMERG), NASA PO.DAAC (MUR25), NOAA (ONI).",
+        "preparing": "The story is being prepared: the server is reproducing the investigation with NASA data.",
+    },
+    "pt": {
+        "hero_kicker": "Golfo do México · 2003–2025 · 23 anos vistos do espaço",
+        "hero_title": "O mar que está mudando de cor e de temperatura",
+        "hero_lead": "Satélites da NASA observaram o Golfo do México todos os meses durante 23 anos. Reunimos esses "
+                     "olhares para responder quatro perguntas: o que muda, onde, quanto e se é realmente uma mudança.",
+        "hero_scroll": "Role para começar",
+        "c1_k": "Capítulo 1",
+        "c1_t": "Um mar que respira",
+        "c1_p": "A cor do oceano revela vida. A clorofila denuncia o fitoplâncton: algas microscópicas que produzem "
+                "boa parte do oxigênio do planeta e alimentam toda a cadeia marinha, do camarão ao atum. Sua "
+                "temperatura, a água que os rios trazem e a luz que refletem podem ser medidas da órbita.",
+        "c1_hint": "Toque em cada satélite",
+        "sats": [
+            {"y": "2002", "n": "Aqua · MODIS", "d": "Mede a cor e a temperatura do oceano. Nosso registro principal desde 2003."},
+            {"y": "2011", "n": "Suomi-NPP · VIIRS", "d": "Um segundo par de olhos sobre a cor do mar. Chave para descobrir a reviravolta desta história."},
+            {"y": "2014", "n": "GPM · IMERG", "d": "Mede a chuva em todo o planeta: quanta água chega aos rios."},
+            {"y": "2024", "n": "PACE · OCI", "d": "A nova geração de cor oceânica: a continuidade para as próximas décadas."},
+        ],
+        "c2_k": "Capítulo 2",
+        "c2_t": "Todo o Golfo está esquentando",
+        "c2_p": "Cada faixa é um ano. Azul, mais frio que o normal; vermelho, mais quente. Aperte reproduzir e veja o "
+                "Golfo mudar de 2003 até hoje. Acontece nas sete regiões estudadas, sem exceção.",
+        "c2_play": "Reproduzir",
+        "c2_jump": "Por volta de 2015 houve um salto: o Golfo subiu de nível e não voltou.",
+        "c2_grid_t": "Quantos meses são extremamente quentes?",
+        "c2_grid_before": "2003–2012",
+        "c2_grid_after": "2016–2025",
+        "c2_grid_cap": "A cada 10 meses",
+        "c3_k": "Capítulo 3",
+        "c3_t": "A média esconde a história",
+        "c3_p": "Visto como um único número, a vida marinha do Golfo parece não mudar. Região por região, a história "
+                "é outra. Toque em cada área do mapa.",
+        "c3_temp": "Temperatura",
+        "c3_chl": "Vida marinha (clorofila)",
+        "up": "sobe", "down": "desce", "flat": "sem mudança clara",
+        "c4_k": "Capítulo 4",
+        "c4_t": "Os rios alimentam a costa",
+        "c4_p": "O Grijalva e o Usumacinta, o segundo maior sistema fluvial do México, deságuam na Baía de Campeche. "
+                "Quando chove em sua bacia, o mar fica mais verde pouco depois. Mova o controle para ver quanto tempo leva.",
+        "c4_slider": "Meses depois da chuva",
+        "c4_strong": "conexão forte", "c4_weak": "conexão fraca",
+        "c4_warn": "Mas a chuva nesta bacia está diminuindo: menos água doce e menos nutrientes para a costa.",
+        "c5_k": "Capítulo 5 · A reviravolta",
+        "c5_t": "O satélite que estava se desviando",
+        "c5_p": "Com um só satélite, as costas pareciam ficar mais verdes. Mas um bom detetive procura uma segunda "
+                "testemunha: o VIIRS. Ao compará-los descobrimos que o MODIS, envelhecendo em sua órbita, via o mar "
+                "um pouco mais verde a cada ano do que ele realmente era.",
+        "c5_one": "Com um satélite",
+        "c5_two": "Com dois satélites",
+        "c5_one_msg": "Conclusão aparente: algumas costas ganham vida e o Golfo não muda.",
+        "c5_two_msg": "Conclusão corrigida: o Golfo perde clorofila, sobretudo no Banco de Campeche e em mar aberto.",
+        "c5_lesson": "Verificar com um segundo instrumento mudou a resposta. Por isso cada resultado desta ferramenta é posto à prova.",
+        "c6_k": "Capítulo 6",
+        "c6_t": "Por que importa",
+        "c6_hint": "Toque em cada cartão",
+        "cards": [
+            {"t": "Pesca", "f": "O Banco de Campeche é lar do polvo-maia e da garoupa.",
+             "b": "É uma das zonas que mais esquentam e onde mais se perde clorofila: menos alimento na base da cadeia."},
+            {"t": "Recifes de coral", "f": "Alacranes e o Sistema Recifal de Veracruz.",
+             "b": "Um grau a mais eleva o risco de branqueamento dos corais."},
+            {"t": "Furacões", "f": "A água quente é o seu combustível.",
+             "b": "Um Golfo mais quente pode favorecer intensificações rápidas perto de Tamaulipas, Veracruz, Tabasco e Iucatã."},
+            {"t": "Rios e comunidades", "f": "A bacia Grijalva–Usumacinta.",
+             "b": "Chove menos nela, e essa chuva chega ao mar um mês depois: água, sedimentos e nutrientes para a costa."},
+        ],
+        "c7_k": "Capítulo 7",
+        "c7_t": "O que ainda não sabemos",
+        "c7_p": "A temperatura já deu um sinal claro. A vida marinha é mais ruidosa: confirmar uma tendência de "
+                "clorofila exige décadas de observação contínua. Continuar medindo com novos satélites, como o PACE, "
+                "é a única forma de saber.",
+        "c7_have": "anos observados",
+        "c7_need_sst": "Temperatura: anos necessários para ter certeza",
+        "c7_need_chl": "Clorofila: anos necessários para ter certeza",
+        "end_t": "Agora explore você",
+        "end_p": "Escolha uma região no globo ou revise cada teste estatístico na análise completa.",
+        "end_region": "Explorar o globo",
+        "end_analysis": "Ver a análise",
+        "team": "Uma investigação de Cardinals Hyperyon · NASA Space Apps Challenge 2026",
+        "sources": "Dados: NASA OB.DAAC (MODIS-Aqua, VIIRS), NASA GES DISC (GPM IMERG), NASA PO.DAAC (MUR25), NOAA (ONI).",
+        "preparing": "A história está sendo preparada: o servidor está reproduzindo a investigação com os dados da NASA.",
+    },
+}
