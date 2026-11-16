@@ -44,7 +44,7 @@ st.set_page_config(
     page_title="Marine Ecosystem Change Explorer",
     page_icon="🌊",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 SETTINGS = get_settings()
@@ -56,7 +56,7 @@ st.markdown(CSS, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------ estado
 ss = st.session_state
-ss.setdefault("view", "region")
+ss.setdefault("view", "region")  # navegación: región | análisis (menú lateral)
 ss.setdefault("lang", "es")
 ss.setdefault("case", default_region_id())
 ss.setdefault("ds", "chl")
@@ -226,58 +226,85 @@ def ds_label(d: str) -> str:
 # ------------------------------------------------------------------ encabezado
 status = read_status()
 any_ready = any(v.get("state") == "ready" for k in CATALOG for v in status.get(k, {}).values())
-h1, h2 = st.columns([0.56, 0.44], vertical_alignment="center")
-with h1:
-    mission_bar(t("brand_sub"), "agui-server · NASA Earthdata")
-with h2:
-    n1, n2, n3 = st.columns([0.52, 0.22, 0.26], vertical_alignment="center")
-    with n1:
-        st.segmented_control(
-            "view",
-            ["region", "analysis"],
-            key="view",
-            label_visibility="collapsed",
-            format_func=lambda v: t("nav_region") if v == "region" else t("nav_analysis"),
-        )
-    with n2:
-        st.segmented_control(
-            "lang", ["es", "en"], key="lang", label_visibility="collapsed", format_func=str.upper
-        )
-    with n3:
-        st.markdown(
-            f'<span class="badge ok"><i></i>{t("badge_real")}</span>'
-            if any_ready
-            else f'<span class="badge prep"><i></i>{t("badge_prep")}</span>',
-            unsafe_allow_html=True,
-        )
-if ss.view is None:
-    ss.view = "region"
 if ss.lang is None:
     ss.lang = "es"
 lang = ss.lang
 reg = REGIONS[ss.case]
 
 
+def last_update_iso() -> str:
+    """Momento más reciente en que el pipeline actualizó algo (status.json)."""
+    stamps = [
+        info.get("updated_at", "")
+        for section in status.values() if isinstance(section, dict)
+        for info in section.values() if isinstance(info, dict)
+    ]
+    return max((x for x in stamps if x), default="")
+
+
+mission_bar(t("brand_sub"), lang, last_update_iso(), T[lang]["clock"])
+
+
+def set_view(v: str):
+    def _cb() -> None:
+        ss.view = v
+
+    return _cb
+
+
+# ------------------------------------------------------------- menú lateral
+with st.sidebar:
+    st.markdown(
+        '<div class="sb-brand"><span class="sb-logo"></span><div><div class="sb-name">MECE</div>'
+        f'<div class="sb-tag">{t("sb_tag")}</div></div></div>'
+        f'<p class="sb-h">{t("sb_nav")}</p>',
+        unsafe_allow_html=True,
+    )
+    with st.container(key="nav"):
+        for v, icon in (("region", ":material/public:"), ("analysis", ":material/insights:")):
+            st.button(
+                t("nav_region") if v == "region" else t("nav_analysis"),
+                key=f"nav_{v}", icon=icon, width="stretch",
+                type="primary" if ss.view == v else "secondary",
+                on_click=set_view(v),
+            )
+    st.markdown(f'<p class="sb-h">{t("sb_lang")}</p>', unsafe_allow_html=True)
+    st.segmented_control("lang", ["es", "en"], key="lang", label_visibility="collapsed",
+                         format_func=lambda x: "Español" if x == "es" else "English")
+    st.markdown(
+        f'<p class="sb-h">{t("sb_data")}</p>'
+        + (f'<span class="badge ok"><i></i>{t("badge_real")}</span>' if any_ready
+           else f'<span class="badge prep"><i></i>{t("badge_prep")}</span>')
+        + f'<div class="sb-foot">NASA Space Apps · Be An Earth System Trend Detective<br>{t("footer_3")}</div>',
+        unsafe_allow_html=True,
+    )
+if ss.lang is None:
+    ss.lang = "es"
+lang = ss.lang
+
+
 def ticker_html() -> str:
+    """Cinta: solo periodos de análisis de cada variable por almacén y última observación del globo."""
+    from mece.catalog import load_stores
+
+    stores = load_stores()
     items = []
     for ds_id in CATALOG:
         for sid, info in status.get(ds_id, {}).items():
             if info.get("state") == "ready":
                 items.append(
-                    f'<span class="ticker-item"><b>{ds_label(ds_id).upper()}</b> · {sid} · '
+                    f'<span class="ticker-item"><b>{ds_label(ds_id).upper()}</b> · '
+                    f"{stores[sid].name if sid in stores else sid} · "
                     f"{info.get('n_months')} {t('months')} · "
                     f"<i>{info.get('first_month')} → {info.get('last_month')}</i></span>"
                 )
     g = status.get("globe", {})
-    if g.get("sst"):
-        items.append(
-            f'<span class="ticker-item"><b>{t("tk_globe_sst")}</b> · <i>{g["sst"].get("date")}</i></span>'
-        )
-    if g.get("chl"):
-        items.append(
-            f'<span class="ticker-item"><b>{t("tk_globe_chl")}</b> · <i>{g["chl"].get("date")}</i></span>'
-        )
-    items += [f'<span class="ticker-item">{x}</span>' for x in T[lang]["tk_static"]]
+    for k in ("sst", "chl"):
+        if g.get(k):
+            items.append(
+                f'<span class="ticker-item"><b>{t("tk_globe_" + k)}</b> · {t("last_obs")} '
+                f'<i>{g[k].get("date")}</i></span>'
+            )
     track = "".join(items)
     return f'<div class="ticker"><div class="ticker-track">{track}{track}</div></div>'
 

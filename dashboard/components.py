@@ -313,37 +313,125 @@ _BAR_HTML = """
     <circle class="sat" cx="60" cy="32" r="3" fill="#f0f9ff"/></svg></div>
   <div class="mb-txt"><div class="mb-title">Marine Ecosystem Change Explorer</div>
     <div class="mb-sub"><span class="mb-dot"></span><span class="mb-subt"></span></div></div>
-  <div class="mb-clock"><div class="mb-cl">UTC</div><div class="mb-time">--:--:--</div><div class="mb-date"></div></div>
+  <div class="mb-clock">
+    <div class="mb-cl"><span class="mb-zone"></span></div>
+    <div class="mb-time">--:--:--</div>
+    <div class="mb-date"></div>
+    <div class="mb-utc"></div>
+  </div>
+  <div class="mb-upd"><div class="mb-cl mb-updl"></div><div class="mb-updv">—</div><div class="mb-updd"></div></div>
 </div>
 """
 _BAR_CSS = """
-.mb{display:flex;align-items:center;gap:16px;padding:12px 2px 8px;font-family:"IBM Plex Mono",ui-monospace,monospace;color:#e2e8f0}
+.mb{display:flex;align-items:center;gap:18px;padding:12px 2px 8px;font-family:"IBM Plex Mono",ui-monospace,monospace;color:#e2e8f0}
 .mb-logo svg{width:58px;height:58px;filter:drop-shadow(0 0 14px rgba(56,189,248,.65))}
 .mb-logo .orb{transform-origin:32px 32px;animation:mbspin 9s linear infinite}
 .mb-logo .sat{transform-origin:32px 32px;animation:mbsat 4.5s linear infinite}
 @keyframes mbspin{to{transform:rotate(360deg)}}
 @keyframes mbsat{0%{transform:rotate(0) scaleY(.36)}100%{transform:rotate(360deg) scaleY(.36)}}
-.mb-title{font-family:"Archivo",system-ui,sans-serif;font-weight:800;font-size:clamp(18px,2.1vw,27px);letter-spacing:.03em;
+.mb-title{font-family:"Archivo",system-ui,sans-serif;font-weight:800;font-size:clamp(18px,2.1vw,28px);letter-spacing:.03em;
   text-transform:uppercase;line-height:1.05;background:linear-gradient(90deg,#e0f2fe,#38bdf8,#818cf8,#e879f9,#38bdf8,#e0f2fe);
   background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:mbshine 9s ease-in-out infinite}
 @keyframes mbshine{0%,100%{background-position:0 0}50%{background-position:100% 0}}
 .mb-sub{display:flex;align-items:center;gap:8px;font-size:11.5px;color:#94a3b8;margin-top:5px;letter-spacing:.06em}
 .mb-dot{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399;animation:mbblink 1.6s infinite}
 @keyframes mbblink{50%{opacity:.25}}
-.mb-clock{margin-left:auto;text-align:right;padding:8px 14px;border-radius:14px;background:rgba(2,6,23,.45);
+.mb-clock,.mb-upd{text-align:right;padding:9px 15px;border-radius:14px;background:rgba(2,6,23,.45);
   border:1px solid rgba(56,189,248,.22);box-shadow:inset 0 0 20px -8px rgba(56,189,248,.5)}
-.mb-cl{font-size:9.5px;letter-spacing:.24em;color:#7dd3fc}
-.mb-time{font-size:20px;font-weight:600;color:#f0f9ff;letter-spacing:.06em;text-shadow:0 0 12px rgba(56,189,248,.6)}
-.mb-date{font-size:10px;color:#64748b}
-@media (max-width:700px){.mb-clock{display:none}}
+.mb-clock{margin-left:auto}
+.mb-cl{font-size:9.5px;letter-spacing:.16em;color:#7dd3fc;text-transform:uppercase;white-space:nowrap}
+.mb-time{font-size:22px;font-weight:600;color:#f0f9ff;letter-spacing:.06em;text-shadow:0 0 12px rgba(56,189,248,.6);line-height:1.25}
+.mb-date{font-size:10.5px;color:#cbd5e1;white-space:nowrap}
+.mb-utc{font-size:9.5px;color:#64748b;margin-top:2px;letter-spacing:.04em;white-space:nowrap}
+.mb-updv{font-family:"Archivo",system-ui;font-weight:700;font-size:16px;color:#a7f3d0;margin-top:3px;text-shadow:0 0 12px rgba(52,211,153,.5)}
+.mb-updd{font-size:9.5px;color:#64748b;margin-top:2px}
+@media (max-width:900px){.mb-upd{display:none}}
+@media (max-width:640px){.mb-clock{display:none}}
 """
-_BAR_JS = """
+_BAR_JS = r"""
+// Fondo de galaxia: se inyecta UNA vez en <body>, fuera de los contenedores de Streamlit,
+// detrás de todo el contenido (z-index -1) y sin capturar eventos.
+function galaxy(){
+  if (document.getElementById("mece-galaxy")) return;
+  const css = document.createElement("style");
+  css.id = "mece-galaxy-css";
+  css.textContent = `
+  #mece-galaxy{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+  #mece-galaxy .milky{position:absolute;left:-30%;top:18%;width:160%;height:46%;transform:rotate(-17deg);filter:blur(28px);opacity:.55;
+    background:radial-gradient(50% 50% at 50% 50%,rgba(148,163,184,.13),rgba(129,140,248,.07) 45%,transparent 72%),
+               radial-gradient(22% 30% at 34% 46%,rgba(244,114,182,.06),transparent 70%),
+               radial-gradient(26% 34% at 68% 54%,rgba(56,189,248,.07),transparent 70%)}
+  #mece-galaxy .dust{position:absolute;inset:0;opacity:.6;transform:rotate(-17deg) scale(1.3);
+    background-image:radial-gradient(1px 1px at 12% 41%,rgba(255,255,255,.7),transparent),radial-gradient(1px 1px at 27% 52%,rgba(191,219,254,.6),transparent),
+      radial-gradient(1px 1px at 43% 47%,rgba(255,255,255,.6),transparent),radial-gradient(1px 1px at 58% 55%,rgba(233,213,255,.6),transparent),
+      radial-gradient(1px 1px at 71% 44%,rgba(255,255,255,.55),transparent),radial-gradient(1px 1px at 86% 50%,rgba(165,243,252,.55),transparent);
+    background-size:340px 180px}
+  #mece-galaxy .ast{position:absolute;left:0;top:0;will-change:transform;animation:mece-fly linear infinite}
+  #mece-galaxy .ast .rock{display:block;animation:mece-spin linear infinite}
+  #mece-galaxy .ast .trail{position:absolute;right:55%;top:50%;height:1.5px;transform:translateY(-50%);border-radius:2px;
+    background:linear-gradient(90deg,transparent,rgba(186,230,253,.28))}
+  @keyframes mece-fly{from{transform:translate(var(--x0),var(--y0)) rotate(var(--a))}to{transform:translate(var(--x1),var(--y1)) rotate(var(--a))}}
+  @keyframes mece-spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){#mece-galaxy .ast{display:none}}`;
+  document.head.appendChild(css);
+  const g = document.createElement("div"); g.id = "mece-galaxy";
+  g.innerHTML = '<div class="milky"></div><div class="dust"></div>';
+  // asteroides: forma irregular, tamaño, trayectoria, velocidad y retraso distintos; opacidad baja
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const rock = (sz, i) => { const n = 9, pts = [];
+    for (let k = 0; k < n; k++){ const ang = 2 * Math.PI * k / n, r = sz / 2 * rnd(.62, 1);
+      pts.push(`${(sz / 2 + r * Math.cos(ang)).toFixed(1)},${(sz / 2 + r * Math.sin(ang)).toFixed(1)}`); }
+    return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><defs><radialGradient id="ag${i}" cx="35%" cy="30%">
+      <stop offset="0" stop-color="#cbd5e1"/><stop offset=".55" stop-color="#64748b"/><stop offset="1" stop-color="#1e293b"/></radialGradient></defs>
+      <polygon points="${pts.join(" ")}" fill="url(#ag${i})"/><circle cx="${sz * .62}" cy="${sz * .6}" r="${sz * .09}" fill="rgba(15,23,42,.55)"/>
+      <circle cx="${sz * .4}" cy="${sz * .66}" r="${sz * .06}" fill="rgba(15,23,42,.5)"/></svg>`; };
+  for (let i = 0; i < 9; i++){
+    const sz = rnd(5, 17), dur = rnd(55, 120), ltr = Math.random() < .7;
+    const y0 = rnd(-5, 95), y1 = y0 + rnd(-25, 25);
+    const a = document.createElement("span"); a.className = "ast";
+    a.style.cssText = `--x0:${ltr ? "-12vw" : "112vw"};--x1:${ltr ? "112vw" : "-12vw"};--y0:${y0}vh;--y1:${y1}vh;` +
+      `--a:${ltr ? 0 : 180}deg;animation-duration:${dur}s;animation-delay:-${rnd(0, dur)}s;opacity:${rnd(.28, .55).toFixed(2)}`;
+    a.innerHTML = `<span class="trail" style="width:${sz * rnd(4, 9)}px"></span>` +
+      `<span class="rock" style="animation-duration:${rnd(14, 40)}s">${rock(sz, i)}</span>`;
+    g.appendChild(a);
+  }
+  document.body.appendChild(g);
+}
+
 export default function(component){
   const {data, parentElement} = component;
+  galaxy();
+  const L = data.labels, locale = data.lang === "en" ? "en-US" : "es-MX";
   parentElement.querySelector(".mb-subt").textContent = data.sub;
-  const t = parentElement.querySelector(".mb-time"), d = parentElement.querySelector(".mb-date");
-  const tick = () => { const n = new Date(); t.textContent = n.toISOString().slice(11, 19);
-    d.textContent = n.toISOString().slice(0, 10) + " · " + data.place; };
+  parentElement.querySelector(".mb-updl").textContent = L.updated;
+  const $ = s => parentElement.querySelector(s);
+  const fT = new Intl.DateTimeFormat(locale, {hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false});
+  const fD = new Intl.DateTimeFormat(locale, {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+  const zone = () => {
+    try {
+      const ab = new Intl.DateTimeFormat(locale, {timeZoneName: "short"}).formatToParts(new Date())
+                   .find(p => p.type === "timeZoneName").value;
+      const city = (Intl.DateTimeFormat().resolvedOptions().timeZone || "").split("/").pop().replace(/_/g, " ");
+      return city ? `${city} (${ab})` : ab;
+    } catch (e) { return ""; } };
+  const upd = data.updated ? Date.parse(data.updated) : NaN;
+  const rel = () => {
+    if (!isFinite(upd)) return L.never;
+    const m = Math.max(0, (Date.now() - upd) / 60000);
+    if (m < 2) return L.now;
+    if (m < 90) return `${L.ago} ${Math.round(m)} ${L.min}`.trim();
+    if (m < 60 * 36) return `${L.ago} ${Math.round(m / 60)} ${L.h}`.trim();
+    return `${L.ago} ${Math.round(m / 1440)} ${L.d}`.trim();
+  };
+  const tick = () => {
+    const n = new Date();
+    $(".mb-zone").textContent = `${L.local} · ${zone()}`;
+    $(".mb-time").textContent = fT.format(n);
+    $(".mb-date").textContent = fD.format(n);
+    $(".mb-utc").textContent = `${n.toISOString().slice(11, 19)} ${L.utc}`;
+    $(".mb-updv").textContent = rel();
+    $(".mb-updd").textContent = isFinite(upd) ? new Date(upd).toLocaleString(locale, {dateStyle: "medium", timeStyle: "short"}) : "";
+  };
   tick(); const id = setInterval(tick, 1000);
   return () => clearInterval(id);
 }
@@ -351,8 +439,9 @@ export default function(component){
 _bar = st.components.v2.component("mece_missionbar", html=_BAR_HTML, css=_BAR_CSS, js=_BAR_JS)
 
 
-def mission_bar(sub: str, place: str):
-    return _bar(key="missionbar", data={"sub": sub, "place": place}, height=96)
+def mission_bar(sub: str, lang: str, updated_iso: str, labels: dict):
+    return _bar(key="missionbar", height=118,
+                data={"sub": sub, "lang": lang, "updated": updated_iso, "labels": labels})
 
 
 # ================================================================== KPI
