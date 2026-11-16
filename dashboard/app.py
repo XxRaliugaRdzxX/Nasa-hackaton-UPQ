@@ -44,7 +44,7 @@ st.set_page_config(
     page_title="Marine Ecosystem Change Explorer",
     page_icon="🌊",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 SETTINGS = get_settings()
@@ -56,7 +56,7 @@ st.markdown(CSS, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------ estado
 ss = st.session_state
-ss.setdefault("view", "region")
+ss.setdefault("view", "region")  # navegación: región | análisis (menú lateral)
 ss.setdefault("lang", "es")
 ss.setdefault("case", default_region_id())
 ss.setdefault("ds", "chl")
@@ -220,64 +220,111 @@ def bbox_txt(b) -> str:
 
 
 def ds_label(d: str) -> str:
-    return CATALOG[d].label_en if ss.lang == "en" else CATALOG[d].label_es
+    return CATALOG[d].loc("label", ss.lang)
 
 
 # ------------------------------------------------------------------ encabezado
 status = read_status()
 any_ready = any(v.get("state") == "ready" for k in CATALOG for v in status.get(k, {}).values())
-h1, h2 = st.columns([0.56, 0.44], vertical_alignment="center")
-with h1:
-    mission_bar(t("brand_sub"), "agui-server · NASA Earthdata")
-with h2:
-    n1, n2, n3 = st.columns([0.52, 0.22, 0.26], vertical_alignment="center")
-    with n1:
-        st.segmented_control(
-            "view",
-            ["region", "analysis"],
-            key="view",
-            label_visibility="collapsed",
-            format_func=lambda v: t("nav_region") if v == "region" else t("nav_analysis"),
-        )
-    with n2:
-        st.segmented_control(
-            "lang", ["es", "en"], key="lang", label_visibility="collapsed", format_func=str.upper
-        )
-    with n3:
-        st.markdown(
-            f'<span class="badge ok"><i></i>{t("badge_real")}</span>'
-            if any_ready
-            else f'<span class="badge prep"><i></i>{t("badge_prep")}</span>',
-            unsafe_allow_html=True,
-        )
-if ss.view is None:
-    ss.view = "region"
-if ss.lang is None:
+if ss.lang not in ("es", "en", "pt"):
     ss.lang = "es"
 lang = ss.lang
 reg = REGIONS[ss.case]
 
 
+def last_update_iso() -> str:
+    """Momento más reciente en que el pipeline actualizó algo (status.json)."""
+    stamps = [
+        info.get("updated_at", "")
+        for section in status.values() if isinstance(section, dict)
+        for info in section.values() if isinstance(info, dict)
+    ]
+    return max((x for x in stamps if x), default="")
+
+
+mission_bar(t("brand_sub"), lang, last_update_iso(), T[lang]["clock"])
+
+
+def set_view(v: str):
+    def _cb() -> None:
+        ss.view = v
+
+    return _cb
+
+
+# ------------------------------------------------------------- menú lateral
+LANGS = (("es", "Español"), ("en", "English"), ("pt", "Português"))
+
+
+def set_lang(code: str):
+    def _cb() -> None:
+        ss.lang = code
+
+    return _cb
+
+
+with st.sidebar:
+    st.markdown(
+        '<div class="sb-brand"><div class="sb-emblem"><svg viewBox="0 0 80 80">'
+        '<defs><radialGradient id="sbp" cx="35%" cy="30%"><stop offset="0" stop-color="#e0f2fe"/>'
+        '<stop offset=".35" stop-color="#38bdf8"/><stop offset=".75" stop-color="#4f46e5"/><stop offset="1" stop-color="#1e1b4b"/>'
+        '</radialGradient><linearGradient id="sbr" x1="0" x2="1"><stop offset="0" stop-color="#22d3ee" stop-opacity="0"/>'
+        '<stop offset=".5" stop-color="#e879f9"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient></defs>'
+        '<circle class="glow" cx="40" cy="40" r="22" fill="#38bdf8" opacity=".35"/>'
+        '<circle cx="40" cy="40" r="16" fill="url(#sbp)"/>'
+        '<ellipse class="ring" cx="40" cy="40" rx="33" ry="10" fill="none" stroke="url(#sbr)" stroke-width="2.4"/>'
+        '<g class="orbit"><circle cx="73" cy="40" r="3.2" fill="#f0f9ff"/></g>'
+        '<path class="spark" d="M62 14l1.6 4.4 4.4 1.6-4.4 1.6L62 26l-1.6-4.4-4.4-1.6 4.4-1.6z" fill="#fde68a"/>'
+        '</svg></div><div><div class="sb-name">NASA Space Apps</div>'
+        f'<div class="sb-tag">{t("sb_tag")}</div></div></div>'
+        f'<p class="sb-h">{t("sb_nav")}</p>',
+        unsafe_allow_html=True,
+    )
+    with st.container(key="nav"):
+        for v, icon in (("region", ":material/public:"), ("analysis", ":material/insights:")):
+            st.button(
+                t("nav_region") if v == "region" else t("nav_analysis"),
+                key=f"nav_{v}", icon=icon, width="stretch",
+                type="primary" if ss.view == v else "secondary",
+                on_click=set_view(v),
+            )
+    st.markdown(f'<p class="sb-h">{t("sb_lang")}</p>', unsafe_allow_html=True)
+    # Botones propios (no segmented_control): siempre hay exactamente un idioma activo
+    with st.container(key="langs"):
+        for code, label in LANGS:
+            st.button(label, key=f"lang_{code}", width="stretch",
+                      type="primary" if ss.lang == code else "secondary", on_click=set_lang(code))
+    st.markdown(
+        f'<p class="sb-h">{t("sb_data")}</p>'
+        + (f'<span class="badge ok"><i></i>{t("badge_real")}</span>' if any_ready
+           else f'<span class="badge prep"><i></i>{t("badge_prep")}</span>'),
+        unsafe_allow_html=True,
+    )
+lang = ss.lang
+
+
 def ticker_html() -> str:
+    """Cinta: solo periodos de análisis de cada variable por almacén y última observación del globo."""
+    from mece.catalog import load_stores
+
+    stores = load_stores()
     items = []
     for ds_id in CATALOG:
         for sid, info in status.get(ds_id, {}).items():
             if info.get("state") == "ready":
                 items.append(
-                    f'<span class="ticker-item"><b>{ds_label(ds_id).upper()}</b> · {sid} · '
+                    f'<span class="ticker-item"><b>{ds_label(ds_id).upper()}</b> · '
+                    f"{stores[sid].name if sid in stores else sid} · "
                     f"{info.get('n_months')} {t('months')} · "
                     f"<i>{info.get('first_month')} → {info.get('last_month')}</i></span>"
                 )
     g = status.get("globe", {})
-    if g.get("sst"):
-        items.append(
-            f'<span class="ticker-item"><b>{t("tk_globe_sst")}</b> · <i>{g["sst"].get("date")}</i></span>'
-        )
-    if g.get("chl"):
-        items.append(
-            f'<span class="ticker-item"><b>{t("tk_globe_chl")}</b> · <i>{g["chl"].get("date")}</i></span>'
-        )
-    items += [f'<span class="ticker-item">{x}</span>' for x in T[lang]["tk_static"]]
+    for k in ("sst", "chl"):
+        if g.get(k):
+            items.append(
+                f'<span class="ticker-item"><b>{t("tk_globe_" + k)}</b> · {t("last_obs")} '
+                f'<i>{g[k].get("date")}</i></span>'
+            )
     track = "".join(items)
     return f'<div class="ticker"><div class="ticker-track">{track}{track}</div></div>'
 
@@ -306,7 +353,7 @@ def status_cards() -> str:
             body, pct = t("empty"), 0
         cards.append(
             f'<div class="st-card"><div class="t">{ds_label(ds_id)}</div><div class="b">{body}</div>'
-            f'<div class="s">{spec.source_en if lang == "en" else spec.source_es}</div>'
+            f'<div class="s">{spec.loc("source", lang)}</div>'
             f'<div class="bar"><span style="width:{pct}%"></span></div></div>'
         )
     g = status.get("globe", {})
@@ -335,7 +382,7 @@ if ss.view == "region":
                 {
                     "id": r.id,
                     "name": r.name(lang),
-                    "region": r.region_en if lang == "en" else r.region_es,
+                    "region": r.loc("region", lang),
                     "bboxTxt": bbox_txt(r.bbox),
                     "abbr": "".join(w[0] for w in r.name_es.replace("–", " ").split()[:2]).upper(),
                 }
@@ -348,8 +395,8 @@ if ss.view == "region":
         st.markdown(
             f'<p class="eyebrow" style="margin-top:18px">{t("eyebrow_case")}</p>'
             f'<div class="case-title">{reg.name(lang)}</div>'
-            f'<div class="case-region">{reg.region_en if lang == "en" else reg.region_es}</div>'
-            f'<p class="case-text">{reg.summary_en if lang == "en" else reg.summary_es}</p>'
+            f'<div class="case-region">{reg.loc("region", lang)}</div>'
+            f'<p class="case-text">{reg.loc("summary", lang)}</p>'
             f'<div class="specs"><span class="dt">{t("bbox")}</span><span class="dd">{bbox_txt(reg.bbox)}</span>'
             f'<span class="dt">{t("period")}</span><span class="dd">{reg.t0} — {reg.t1}</span>'
             f'<span class="dt">{t("variables")}</span><span class="dd">{chips}</span>'
@@ -368,7 +415,7 @@ if ss.view == "region":
                     {
                         "id": r.id,
                         "name": r.name(lang),
-                        "region": r.region_en if lang == "en" else r.region_es,
+                        "region": r.loc("region", lang),
                         "bbox": list(r.bbox),
                         "bboxTxt": bbox_txt(r.bbox),
                         "period": f"{r.t0} — {r.t1}",
@@ -406,7 +453,7 @@ else:
         ss.y1 = y_max
     st.markdown(
         f'<p class="eyebrow">{t("eyebrow_case")}</p><div class="case-title">{reg.name(lang)}</div>'
-        f'<div class="case-region">{reg.region_en if lang == "en" else reg.region_es} · {bbox_txt(reg.bbox)}</div>',
+        f'<div class="case-region">{reg.loc("region", lang)} · {bbox_txt(reg.bbox)}</div>',
         unsafe_allow_html=True,
     )
     with st.container(border=True):
@@ -534,10 +581,10 @@ else:
     )
 
     tmap_disp = tmap.copy()
-    map_units = spec.trend_units_en if lang == "en" else spec.trend_units_es
+    map_units = spec.loc("trend_units", lang)
     if is_log:
         tmap_disp["slope"] = (np.power(10.0, tmap["slope"]) - 1) * 100
-    src = spec.source_en if lang == "en" else spec.source_es
+    src = spec.loc("source", lang)
     m1, m2 = st.columns([0.47, 0.53], gap="medium")
     with m1, st.container(border=True):
         st.markdown(
@@ -596,7 +643,7 @@ else:
             key="stripes",
         )
     st.markdown(
-        f'<div class="limit">{spec.limitation_en if lang == "en" else spec.limitation_es}</div>',
+        f'<div class="limit">{spec.loc("limitation", lang)}</div>',
         unsafe_allow_html=True,
     )
 

@@ -23,8 +23,10 @@ log = logging.getLogger(__name__)
 
 # Periodos completos disponibles (verificados en CMR, 2026-11-15)
 DEFAULT_RANGES = {
-    "chl": ("2002-07", "2026-04"),  # MODISA_L3m_CHL R2022.0 estándar
-    "sst": ("2002-09", None),  # MUR25 hasta el último mes completo
+    # Fin None = hasta el último mes completo: el worker busca en CMR y descarga solo lo que
+    # NASA haya publicado (la clorofila estándar llega con meses de retraso; MUR25 en ~1 día).
+    "chl": ("2002-07", None),  # MODISA_L3m_CHL R2022.0 estándar
+    "sst": ("2002-09", None),  # MUR25
 }
 
 

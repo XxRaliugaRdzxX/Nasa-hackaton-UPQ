@@ -29,6 +29,12 @@ cases:
     name_en: Grijalva–Usumacinta plume
     region_es: Golfo de México · Tabasco y Campeche
     region_en: Gulf of Mexico · Tabasco and Campeche
+    name_pt: Pluma Grijalva–Usumacinta
+    region_pt: Golfo do México · Tabasco e Campeche
+    summary_pt: >
+      Zona costeira sob a influência do segundo maior sistema fluvial do México. Aqui
+      se pergunta o que muda, onde, quanto e se a mudança é estatisticamente
+      significativa.
     bbox: [18.0, 20.5, -94.0, -90.5]
     t0: "2003-01"
     t1: "2025-12"
@@ -48,6 +54,10 @@ cases:
     name_en: Gulf of Mexico
     region_es: Cuenca oceánica completa
     region_en: Entire ocean basin
+    name_pt: Golfo do México
+    region_pt: Bacia oceânica completa
+    summary_pt: >
+      Visão geral do Golfo: contraste entre plataformas costeiras e águas oceânicas.
     bbox: [18.0, 30.5, -98.0, -80.5]
     t0: "2003-01"
     t1: "2025-12"
@@ -64,6 +74,11 @@ cases:
     name_en: Mississippi Delta
     region_es: Golfo de México · Luisiana
     region_en: Gulf of Mexico · Louisiana
+    name_pt: Delta do Mississippi
+    region_pt: Golfo do México · Louisiana
+    summary_pt: >
+      A maior descarga fluvial do Golfo; referência para comparar com o sistema
+      Grijalva–Usumacinta.
     bbox: [27.5, 30.5, -92.5, -87.5]
     t0: "2003-01"
     t1: "2025-12"
@@ -81,6 +96,11 @@ cases:
     name_en: Gulf of California
     region_es: Pacífico mexicano
     region_en: Mexican Pacific
+    name_pt: Golfo da Califórnia
+    region_pt: Pacífico mexicano
+    summary_pt: >
+      Prova de fogo da ferramenta: outra região, os mesmos parâmetros, nenhuma
+      mudança de código.
     bbox: [23.0, 31.5, -114.9, -106.5]
     t0: "2003-01"
     t1: "2025-12"
