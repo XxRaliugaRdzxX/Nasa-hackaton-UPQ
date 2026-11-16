@@ -220,13 +220,13 @@ def bbox_txt(b) -> str:
 
 
 def ds_label(d: str) -> str:
-    return CATALOG[d].label_en if ss.lang == "en" else CATALOG[d].label_es
+    return CATALOG[d].loc("label", ss.lang)
 
 
 # ------------------------------------------------------------------ encabezado
 status = read_status()
 any_ready = any(v.get("state") == "ready" for k in CATALOG for v in status.get(k, {}).values())
-if ss.lang is None:
+if ss.lang not in ("es", "en", "pt"):
     ss.lang = "es"
 lang = ss.lang
 reg = REGIONS[ss.case]
@@ -253,9 +253,29 @@ def set_view(v: str):
 
 
 # ------------------------------------------------------------- menú lateral
+LANGS = (("es", "Español"), ("en", "English"), ("pt", "Português"))
+
+
+def set_lang(code: str):
+    def _cb() -> None:
+        ss.lang = code
+
+    return _cb
+
+
 with st.sidebar:
     st.markdown(
-        '<div class="sb-brand"><span class="sb-logo"></span><div><div class="sb-name">MECE</div>'
+        '<div class="sb-brand"><div class="sb-emblem"><svg viewBox="0 0 80 80">'
+        '<defs><radialGradient id="sbp" cx="35%" cy="30%"><stop offset="0" stop-color="#e0f2fe"/>'
+        '<stop offset=".35" stop-color="#38bdf8"/><stop offset=".75" stop-color="#4f46e5"/><stop offset="1" stop-color="#1e1b4b"/>'
+        '</radialGradient><linearGradient id="sbr" x1="0" x2="1"><stop offset="0" stop-color="#22d3ee" stop-opacity="0"/>'
+        '<stop offset=".5" stop-color="#e879f9"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient></defs>'
+        '<circle class="glow" cx="40" cy="40" r="22" fill="#38bdf8" opacity=".35"/>'
+        '<circle cx="40" cy="40" r="16" fill="url(#sbp)"/>'
+        '<ellipse class="ring" cx="40" cy="40" rx="33" ry="10" fill="none" stroke="url(#sbr)" stroke-width="2.4"/>'
+        '<g class="orbit"><circle cx="73" cy="40" r="3.2" fill="#f0f9ff"/></g>'
+        '<path class="spark" d="M62 14l1.6 4.4 4.4 1.6-4.4 1.6L62 26l-1.6-4.4-4.4-1.6 4.4-1.6z" fill="#fde68a"/>'
+        '</svg></div><div><div class="sb-name">NASA Space Apps</div>'
         f'<div class="sb-tag">{t("sb_tag")}</div></div></div>'
         f'<p class="sb-h">{t("sb_nav")}</p>',
         unsafe_allow_html=True,
@@ -269,17 +289,17 @@ with st.sidebar:
                 on_click=set_view(v),
             )
     st.markdown(f'<p class="sb-h">{t("sb_lang")}</p>', unsafe_allow_html=True)
-    st.segmented_control("lang", ["es", "en"], key="lang", label_visibility="collapsed",
-                         format_func=lambda x: "Español" if x == "es" else "English")
+    # Botones propios (no segmented_control): siempre hay exactamente un idioma activo
+    with st.container(key="langs"):
+        for code, label in LANGS:
+            st.button(label, key=f"lang_{code}", width="stretch",
+                      type="primary" if ss.lang == code else "secondary", on_click=set_lang(code))
     st.markdown(
         f'<p class="sb-h">{t("sb_data")}</p>'
         + (f'<span class="badge ok"><i></i>{t("badge_real")}</span>' if any_ready
-           else f'<span class="badge prep"><i></i>{t("badge_prep")}</span>')
-        + f'<div class="sb-foot">NASA Space Apps · Be An Earth System Trend Detective<br>{t("footer_3")}</div>',
+           else f'<span class="badge prep"><i></i>{t("badge_prep")}</span>'),
         unsafe_allow_html=True,
     )
-if ss.lang is None:
-    ss.lang = "es"
 lang = ss.lang
 
 
@@ -333,7 +353,7 @@ def status_cards() -> str:
             body, pct = t("empty"), 0
         cards.append(
             f'<div class="st-card"><div class="t">{ds_label(ds_id)}</div><div class="b">{body}</div>'
-            f'<div class="s">{spec.source_en if lang == "en" else spec.source_es}</div>'
+            f'<div class="s">{spec.loc("source", lang)}</div>'
             f'<div class="bar"><span style="width:{pct}%"></span></div></div>'
         )
     g = status.get("globe", {})
@@ -362,7 +382,7 @@ if ss.view == "region":
                 {
                     "id": r.id,
                     "name": r.name(lang),
-                    "region": r.region_en if lang == "en" else r.region_es,
+                    "region": r.loc("region", lang),
                     "bboxTxt": bbox_txt(r.bbox),
                     "abbr": "".join(w[0] for w in r.name_es.replace("–", " ").split()[:2]).upper(),
                 }
@@ -375,8 +395,8 @@ if ss.view == "region":
         st.markdown(
             f'<p class="eyebrow" style="margin-top:18px">{t("eyebrow_case")}</p>'
             f'<div class="case-title">{reg.name(lang)}</div>'
-            f'<div class="case-region">{reg.region_en if lang == "en" else reg.region_es}</div>'
-            f'<p class="case-text">{reg.summary_en if lang == "en" else reg.summary_es}</p>'
+            f'<div class="case-region">{reg.loc("region", lang)}</div>'
+            f'<p class="case-text">{reg.loc("summary", lang)}</p>'
             f'<div class="specs"><span class="dt">{t("bbox")}</span><span class="dd">{bbox_txt(reg.bbox)}</span>'
             f'<span class="dt">{t("period")}</span><span class="dd">{reg.t0} — {reg.t1}</span>'
             f'<span class="dt">{t("variables")}</span><span class="dd">{chips}</span>'
@@ -395,7 +415,7 @@ if ss.view == "region":
                     {
                         "id": r.id,
                         "name": r.name(lang),
-                        "region": r.region_en if lang == "en" else r.region_es,
+                        "region": r.loc("region", lang),
                         "bbox": list(r.bbox),
                         "bboxTxt": bbox_txt(r.bbox),
                         "period": f"{r.t0} — {r.t1}",
@@ -433,7 +453,7 @@ else:
         ss.y1 = y_max
     st.markdown(
         f'<p class="eyebrow">{t("eyebrow_case")}</p><div class="case-title">{reg.name(lang)}</div>'
-        f'<div class="case-region">{reg.region_en if lang == "en" else reg.region_es} · {bbox_txt(reg.bbox)}</div>',
+        f'<div class="case-region">{reg.loc("region", lang)} · {bbox_txt(reg.bbox)}</div>',
         unsafe_allow_html=True,
     )
     with st.container(border=True):
@@ -561,10 +581,10 @@ else:
     )
 
     tmap_disp = tmap.copy()
-    map_units = spec.trend_units_en if lang == "en" else spec.trend_units_es
+    map_units = spec.loc("trend_units", lang)
     if is_log:
         tmap_disp["slope"] = (np.power(10.0, tmap["slope"]) - 1) * 100
-    src = spec.source_en if lang == "en" else spec.source_es
+    src = spec.loc("source", lang)
     m1, m2 = st.columns([0.47, 0.53], gap="medium")
     with m1, st.container(border=True):
         st.markdown(
@@ -623,7 +643,7 @@ else:
             key="stripes",
         )
     st.markdown(
-        f'<div class="limit">{spec.limitation_en if lang == "en" else spec.limitation_es}</div>',
+        f'<div class="limit">{spec.loc("limitation", lang)}</div>',
         unsafe_allow_html=True,
     )
 

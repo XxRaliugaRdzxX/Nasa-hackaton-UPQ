@@ -401,7 +401,7 @@ function galaxy(){
 export default function(component){
   const {data, parentElement} = component;
   galaxy();
-  const L = data.labels, locale = data.lang === "en" ? "en-US" : "es-MX";
+  const L = data.labels, locale = {en: "en-US", pt: "pt-BR"}[data.lang] || "es-MX";
   parentElement.querySelector(".mb-subt").textContent = data.sub;
   parentElement.querySelector(".mb-updl").textContent = L.updated;
   const $ = s => parentElement.querySelector(s);

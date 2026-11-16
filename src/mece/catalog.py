@@ -46,6 +46,14 @@ class DatasetSpec:
     limitation_es: str = ""
     limitation_en: str = ""
     available: bool = True
+    label_pt: str = ""
+    source_pt: str = ""
+    trend_units_pt: str = ""
+    limitation_pt: str = ""
+
+    def loc(self, field: str, lang: str) -> str:
+        """Texto del campo en el idioma pedido (es/en/pt), con respaldo en español."""
+        return getattr(self, f"{field}_{lang}", "") or getattr(self, f"{field}_es", "")
 
 
 CATALOG: dict[str, DatasetSpec] = {
@@ -62,6 +70,16 @@ CATALOG: dict[str, DatasetSpec] = {
         label_en="Chlorophyll-a",
         source_es="MODIS-Aqua L3m R2022.0 · mensual 4 km · NASA OB.DAAC",
         source_en="MODIS-Aqua L3m R2022.0 · monthly 4 km · NASA OB.DAAC",
+        label_pt="Clorofila-a",
+        source_pt="MODIS-Aqua L3m R2022.0 · mensal 4 km · NASA OB.DAAC",
+        trend_units_pt="% / década",
+        limitation_pt=(
+            "<strong>Limitação declarada · águas Caso 2:</strong> na faixa costeira, os "
+            "sedimentos e a matéria orgânica dissolvida do aporte fluvial superestimam a "
+            "clorofila por satélite. A clorofila indica biomassa fitoplanctônica superficial, "
+            "não produtividade. Com 23 anos de registro, uma tendência não pode, por si só, "
+            "ser atribuída à mudança climática."
+        ),
         log_transform=True,
         trend_units_es="% / década",
         trend_units_en="% / decade",
@@ -92,6 +110,14 @@ CATALOG: dict[str, DatasetSpec] = {
         label_en="Sea surface temperature",
         source_es="GHRSST MUR25 v4.2 · diario→mensual 0.25° · NASA PO.DAAC",
         source_en="GHRSST MUR25 v4.2 · daily→monthly 0.25° · NASA PO.DAAC",
+        label_pt="Temperatura da superfície do mar",
+        source_pt="GHRSST MUR25 v4.2 · diário→mensal 0,25° · NASA PO.DAAC",
+        trend_units_pt="°C / década",
+        limitation_pt=(
+            "<strong>Limitação declarada · produto L4:</strong> MUR é uma análise multissensor "
+            "interpolada (TSM de fundação). Não é uma observação direta por pixel e suaviza a "
+            "variabilidade costeira fina."
+        ),
         log_transform=False,
         trend_units_es="°C / década",
         trend_units_en="°C / decade",
@@ -126,9 +152,16 @@ class Region:
     marker: dict = field(default_factory=dict)
     summary_es: str = ""
     summary_en: str = ""
+    name_pt: str = ""
+    region_pt: str = ""
+    summary_pt: str = ""
+
+    def loc(self, field: str, lang: str) -> str:
+        """Texto del campo en el idioma pedido (es/en/pt), con respaldo en español."""
+        return getattr(self, f"{field}_{lang}", "") or getattr(self, f"{field}_es", "")
 
     def name(self, lang: str) -> str:
-        return self.name_en if lang == "en" else self.name_es
+        return self.loc("name", lang)
 
 
 @dataclass(frozen=True)
@@ -162,6 +195,9 @@ def load_regions() -> dict[str, Region]:
             marker=c.get("marker", {}),
             summary_es=c.get("summary_es", "").strip(),
             summary_en=c.get("summary_en", "").strip(),
+            name_pt=c.get("name_pt", ""),
+            region_pt=c.get("region_pt", ""),
+            summary_pt=c.get("summary_pt", "").strip(),
         )
     return out
 

@@ -34,10 +34,22 @@ html,body{background:var(--bg)!important;color:var(--ink)}
   -webkit-mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 85%);mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 85%)}
 @keyframes twinkle{0%{opacity:.55}100%{opacity:1}}
 [data-testid="stAppViewContainer"]>.main,.block-container{position:relative;z-index:1}
-/* encabezado nativo: invisible, pero se conserva el botón para abrir el menú lateral (móvil) */
-[data-testid="stHeader"]{background:transparent!important;height:0!important}
-[data-testid="stToolbar"],[data-testid="stDecoration"],[data-testid="stMainMenu"],[data-testid="stAppDeployButton"],footer,#MainMenu{display:none!important}
-[data-testid="stExpandSidebarButton"],[data-testid="stSidebarCollapseButton"] button{color:#7dd3fc!important}
+/* encabezado nativo: transparente; se ocultan sus acciones pero NO el botón para reabrir el menú
+   lateral (vive dentro de stToolbar: ocultar stToolbar entero deja al usuario sin menú) */
+[data-testid="stHeader"]{background:transparent!important;pointer-events:none}
+[data-testid="stHeader"] [data-testid="stExpandSidebarButton"]{pointer-events:auto}
+[data-testid="stToolbarActions"],[data-testid="stMainMenu"],[data-testid="stAppDeployButton"],
+[data-testid="stStatusWidget"],[data-testid="stDecoration"],footer,#MainMenu{display:none!important}
+[data-testid="stExpandSidebarButton"]{position:fixed!important;top:14px;left:14px;z-index:1000002;
+  width:46px!important;height:46px!important;border-radius:14px!important;display:grid!important;place-items:center;
+  background:linear-gradient(135deg,#0ea5e9,#6366f1 55%,#a855f7)!important;color:#fff!important;border:none!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.18) inset,0 10px 30px -8px rgba(99,102,241,.95)!important;
+  animation:sbpulse 2.4s ease-in-out infinite;transition:transform .25s}
+[data-testid="stExpandSidebarButton"]:hover{transform:scale(1.08)}
+[data-testid="stExpandSidebarButton"] *{color:#fff!important}
+@keyframes sbpulse{0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,.18) inset,0 0 0 0 rgba(56,189,248,.55)}
+  50%{box-shadow:0 0 0 1px rgba(255,255,255,.18) inset,0 0 0 10px rgba(56,189,248,0)}}
+[data-testid="stSidebarCollapseButton"] button{color:#7dd3fc!important}
 
 /* ---------- menú lateral ---------- */
 [data-testid="stSidebar"]{background:linear-gradient(180deg,rgba(2,6,23,.94),rgba(9,16,38,.88))!important;
@@ -46,14 +58,26 @@ html,body{background:var(--bg)!important;color:var(--ink)}
 [data-testid="stSidebar"] [data-testid="stSidebarContent"]{background:transparent!important}
 [data-testid="stSidebarUserContent"]{padding-top:18px}
 .sb-brand{display:flex;align-items:center;gap:12px;padding:6px 4px 18px;margin-bottom:6px;border-bottom:1px solid rgba(148,163,184,.12)}
-.sb-logo{width:38px;height:38px;border-radius:12px;background:conic-gradient(from 200deg,#22d3ee,#6366f1,#e879f9,#22d3ee);
-  box-shadow:0 0 22px -4px rgba(56,189,248,.8);animation:sbspin 12s linear infinite;position:relative}
-.sb-logo::after{content:"";position:absolute;inset:7px;border-radius:50%;background:#020617;box-shadow:inset 0 0 10px rgba(56,189,248,.6)}
-@keyframes sbspin{to{filter:hue-rotate(360deg)}}
-.sb-name{font-family:var(--display);font-weight:900;font-size:19px;letter-spacing:.12em;color:#fff}
-.sb-tag{font-family:var(--mono);font-size:10px;color:#7dd3fc;letter-spacing:.06em}
+.sb-emblem svg{width:58px;height:58px;overflow:visible;filter:drop-shadow(0 0 16px rgba(56,189,248,.75))}
+.sb-emblem .glow{transform-origin:40px 40px;animation:sbglow 3.2s ease-in-out infinite}
+.sb-emblem .ring{transform-origin:40px 40px;transform:rotate(-18deg)}
+.sb-emblem .orbit{transform-origin:40px 40px;animation:sborbit 5s linear infinite}
+.sb-emblem .spark{transform-origin:62px 20px;animation:sbspark 2.6s ease-in-out infinite}
+@keyframes sbglow{0%,100%{opacity:.25;transform:scale(1)}50%{opacity:.55;transform:scale(1.25)}}
+@keyframes sborbit{from{transform:rotate(-18deg) rotate(0) scaleY(1)}to{transform:rotate(-18deg) rotate(360deg)}}
+@keyframes sbspark{0%,100%{opacity:.2;transform:scale(.6)}50%{opacity:1;transform:scale(1.1)}}
+.sb-name{font-family:var(--display);font-weight:900;font-size:19px;letter-spacing:.02em;line-height:1.1;
+  background:linear-gradient(90deg,#f0f9ff,#7dd3fc,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sb-tag{font-family:var(--mono);font-size:9.5px;color:#7dd3fc;letter-spacing:.04em;margin-top:3px;line-height:1.4}
 p.sb-h{font-family:var(--mono);font-size:10px!important;letter-spacing:.22em;text-transform:uppercase;color:#64748b;margin:18px 0 8px 2px}
-.st-key-nav [data-testid="stVerticalBlock"]{gap:8px}
+.st-key-nav [data-testid="stVerticalBlock"],.st-key-langs [data-testid="stVerticalBlock"]{gap:8px}
+.st-key-langs button{justify-content:flex-start!important;border-radius:12px!important;padding:8px 14px!important;
+  font-family:var(--mono)!important;font-size:13px!important;transition:all .3s cubic-bezier(.2,.8,.2,1)!important}
+.st-key-langs button[kind="secondary"]{background:rgba(15,23,42,.5)!important;border:1px solid rgba(148,163,184,.14)!important;color:#cbd5e1!important}
+.st-key-langs button[kind="secondary"]:hover{transform:translateX(5px);color:#fff!important;border-color:rgba(56,189,248,.6)!important;
+  box-shadow:0 0 22px -8px rgba(56,189,248,.9)}
+.st-key-langs button[kind="primary"]{border:none!important;color:#fff!important;
+  background:linear-gradient(135deg,rgba(14,165,233,.85),rgba(99,102,241,.85))!important;box-shadow:0 8px 24px -10px rgba(99,102,241,.95)!important}
 .st-key-nav button{justify-content:flex-start!important;border-radius:14px!important;padding:12px 16px!important;
   font-family:var(--display)!important;font-weight:700!important;font-size:15px!important;letter-spacing:.02em;
   transition:all .3s cubic-bezier(.2,.8,.2,1)!important;position:relative;overflow:hidden}
@@ -66,7 +90,7 @@ p.sb-h{font-family:var(--mono);font-size:10px!important;letter-spacing:.22em;tex
 .st-key-nav button[kind="primary"]::before{content:"";position:absolute;left:0;top:18%;bottom:18%;width:3px;border-radius:3px;
   background:#e0f2fe;box-shadow:0 0 12px #e0f2fe}
 .st-key-nav button span[data-testid="stIconMaterial"]{font-size:20px!important;margin-right:6px}
-.sb-foot{font-family:var(--mono);font-size:10px;color:#475569;margin-top:26px;line-height:1.6;border-top:1px solid rgba(148,163,184,.1);padding-top:14px}
+
 .block-container{max-width:1360px;padding:10px 26px 50px!important}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:linear-gradient(var(--sky),var(--violet));border-radius:10px}
 ::-webkit-scrollbar-track{background:#020617}
