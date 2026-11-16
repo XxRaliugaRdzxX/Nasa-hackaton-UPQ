@@ -432,8 +432,12 @@ export default function(component){
     $(".mb-updv").textContent = rel();
     $(".mb-updd").textContent = isFinite(upd) ? new Date(upd).toLocaleString(locale, {dateStyle: "medium", timeStyle: "short"}) : "";
   };
-  tick(); const id = setInterval(tick, 1000);
-  return () => clearInterval(id);
+  // Streamlit vuelve a ejecutar este módulo cuando cambian los datos (p. ej. el idioma) SIN
+  // llamar a la limpieza anterior (solo lo hace al desmontar). Si no se detiene aquí el reloj
+  // previo, quedan varios intervalos escribiendo en idiomas distintos (el reloj "parpadea").
+  if (parentElement.__mbTimer) clearInterval(parentElement.__mbTimer);
+  tick(); parentElement.__mbTimer = setInterval(tick, 1000);
+  return () => { clearInterval(parentElement.__mbTimer); parentElement.__mbTimer = null; };
 }
 """
 _bar = st.components.v2.component("mece_missionbar", html=_BAR_HTML, css=_BAR_CSS, js=_BAR_JS)
@@ -496,9 +500,11 @@ export default function(component){
       if (c.text) { s.textContent = c.text; return; }
       if (c.value === null || !isFinite(c.value)) { s.textContent = "—"; return; }
       const v = c.value * p; s.textContent = (c.sign && v >= 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(c.dec); });
-    if (p < 1) raf = requestAnimationFrame(step);
+    if (p < 1) parentElement.__kpRaf = raf = requestAnimationFrame(step);
   };
+  if (parentElement.__kpRaf) cancelAnimationFrame(parentElement.__kpRaf);  // ver nota del reloj
   raf = requestAnimationFrame(step);
+  parentElement.__kpRaf = raf;
   box.querySelectorAll(".k").forEach(k => {
     k.onmousemove = e => { const r = k.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
       k.style.transform = `rotateY(${x * 10}deg) rotateX(${-y * 10}deg) translateY(-3px)`; };

@@ -41,8 +41,8 @@ from mece.visualization.figures import (  # noqa: E402
 )
 
 st.set_page_config(
-    page_title="Marine Ecosystem Change Explorer",
-    page_icon="🌊",
+    page_title="NASA Space Apps",
+    page_icon=str(Path(__file__).resolve().parent / "assets" / "favicon.png"),
     layout="wide",
     initial_sidebar_state="expanded",
 )

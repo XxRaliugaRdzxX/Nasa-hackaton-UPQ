@@ -27,6 +27,14 @@ RUN pip install --no-deps --force-reinstall .
 
 COPY config ./config
 COPY dashboard ./dashboard
+
+# HTML inicial de Streamlit (se ve antes de que cargue la app y en vistas previas de enlaces):
+# título y favicon del proyecto en lugar de "Streamlit"
+RUN ST=$(python -c "import streamlit, os; print(os.path.dirname(streamlit.__file__))")/static \
+ && sed -i 's|<title>Streamlit</title>|<title>NASA Space Apps</title>|' "$ST/index.html" \
+ && cp dashboard/assets/favicon.png "$ST/favicon.png" \
+ && sed -i 's|href="./favicon.png"|href="./favicon.png?v=2"|' "$ST/index.html"
+# ?v=2: Cloudflare cachea /favicon.png un año (immutable); cambiar la versión fuerza el nuevo ícono
 COPY .streamlit ./.streamlit
 COPY docker/worker.sh ./docker/worker.sh
 
