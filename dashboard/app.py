@@ -169,7 +169,7 @@ def basin_arcs(lang: str) -> list[dict]:
     return arcs
 
 
-@st.cache_data(show_spinner=False, max_entries=64)
+@st.cache_data(show_spinner=False, max_entries=24)
 def analysis_series(ds_id: str, bbox: tuple, t0: str, t1: str, season: str):
     da = fetch_dataset(ds_id, bbox, t0, t1, download_missing=False)
     if int(da.attrs.get("months_missing", 0)) > 0:  # nunca se calcula con datos incompletos
@@ -182,7 +182,7 @@ def analysis_series(ds_id: str, bbox: tuple, t0: str, t1: str, season: str):
     return s, tr.as_dict(), meta
 
 
-@st.cache_data(show_spinner=False, max_entries=32)
+@st.cache_data(show_spinner=False, max_entries=8)
 def analysis_map(ds_id: str, bbox: tuple, t0: str, t1: str, season: str):
     """Mapa de tendencia: carga el precálculo o lo calcula (a 0.25° si es grande)."""
     key = result_cache_key(ds_id, bbox, t0, t1, season)
@@ -218,6 +218,14 @@ def research_results(stamp: float):
     res = json.loads((d / "results.json").read_text())
     geo = json.loads((d / "regions.geojson").read_text()) if (d / "regions.geojson").exists() else None
     return res, geo
+
+
+@st.cache_data(show_spinner=False, max_entries=6)
+def story_payload(stamp: float, lang: str, hero: str) -> dict:
+    """Datos de la Historia ya listos (el mapa se calcula una vez por idioma, no en cada rerun)."""
+    res, geo = research_results(stamp)
+    land = str(DATA / "raw" / "ancillary" / "natural_earth" / "ne_10m_land.zip")
+    return json_safe(build_story_data(res, geo, lang, STORY_TEXT[lang], land, hero))
 
 
 def results_stamp() -> float:
@@ -396,13 +404,8 @@ def status_cards() -> str:
 
 # ============================================================== VISTA HISTORIA
 if ss.view == "story":
-    res, geo = research_results(results_stamp())
     hero = globe_assets()["tex"].get("chl") or globe_assets()["tex"].get("sst", "")
-    story(
-        json_safe(build_story_data(res, geo, lang, STORY_TEXT[lang],
-                                   str(DATA / "raw" / "ancillary" / "natural_earth" / "ne_10m_land.zip"), hero)),
-        on_nav=cb_story_nav,
-    )
+    story(story_payload(results_stamp(), lang, hero), on_nav=cb_story_nav)
 
 # =============================================================== VISTA REGIÓN
 elif ss.view == "region":
